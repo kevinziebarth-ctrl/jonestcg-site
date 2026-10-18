@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Upcoming Shows · The Jones TCG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Upcoming shows: the page behind the home calendar. Same brand look as index.html. */
+:root {
+  color-scheme: dark;
+  --navy-900: #071338; --navy-800: #0B1C55; --navy-700: #13297A;
+  --gold: #F6C431; --gold-ink: #1A1300; --cream: #FBF6EA; --mist: #B9C6EE;
+  --line: rgba(185,198,238,.18); --note: #FFE7A0;
+  --f-display: "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--navy-900) url(pattern.webp) center top / 520px auto; color: var(--cream); font-family: var(--f-body); font-size: 17px; line-height: 1.55; min-height: 100vh; }
+a { color: inherit; }
+.inner { max-width: 760px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+header { background: rgba(7,19,56,.92); border-bottom: 1px solid var(--line); position: sticky; top: 0; backdrop-filter: blur(8px); z-index: 2; }
+header .inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+.back { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; }
+.back img { width: 40px; height: 40px; }
+.pay { background: var(--gold); color: var(--gold-ink); text-decoration: none; font-weight: 800; font-family: var(--f-display); padding: 10px 18px; border-radius: 12px; white-space: nowrap; }
+main { padding: 24px 0 48px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(34px, 8vw, 52px); line-height: 1.05; margin: 6px 0 10px; }
+.lede { color: var(--mist); margin: 0 0 20px; }
+.note { background: rgba(255,231,160,.1); border: 1px dashed var(--note); color: var(--note); border-radius: 12px; padding: 10px 14px; font-size: 14px; margin-bottom: 20px; }
+.note[hidden] { display: none; }
+ol.shows { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.show { display: grid; grid-template-columns: 58px 1fr; gap: 12px; align-items: center; background: var(--navy-800); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.date { background: var(--cream); color: var(--navy-800); border-radius: 10px; text-align: center; padding: 5px 0; font-family: var(--f-display); line-height: 1; }
+.date .m { font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; font-weight: 700; }
+.date .d { font-size: 26px; font-weight: 800; margin-top: 2px; }
+.date .w { font-size: 11px; font-family: var(--f-body); font-weight: 600; margin-top: 1px; }
+.show h2 { font-family: var(--f-display); font-size: 19px; margin: 0; line-height: 1.15; }
+.show p { margin: 0; color: var(--mist); font-size: 14px; line-height: 1.35; }
+.booth { display: inline-block; margin-top: 4px; font-family: var(--f-mono); font-size: 12px; font-weight: 700; color: var(--gold); border: 1px solid rgba(246,196,49,.4); border-radius: 999px; padding: 2px 10px; }
+.show a.more { color: var(--gold); font-weight: 700; font-size: 15px; }
+.show.withflyer { grid-template-columns: 58px 1fr 64px; }
+.show .host { font-size: 13px; }
+.show a.more { font-size: 14px; }
+.show .flyer { width: 64px; height: 84px; border: 0; padding: 0; border-radius: 8px; background: var(--navy-700) center top / cover no-repeat; cursor: pointer; box-shadow: 0 0 0 2px var(--gold); }
+.flyerbox { border: 0; padding: 12px; background: var(--navy-800); color: var(--cream); border-radius: 16px; max-width: min(520px, 94vw); max-height: 94vh; overflow: auto; }
+@media (max-width: 699px) { .flyerbox { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding: 12px 12px max(16px, env(safe-area-inset-bottom)); } }
+.flyerbox::backdrop { background: rgba(3,8,26,.8); }
+.flyerbox img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.flyerbox .cap { font-size: 14px; color: var(--mist); margin: 10px 2px 6px; }
+.flyerbox form { position: sticky; top: 0; text-align: right; height: 0; }
+.flyerbox .close { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--cream); color: var(--navy-800); font-size: 18px; font-weight: 800; cursor: pointer; margin: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.fbtns { display: grid; gap: 8px; margin: 4px 0 6px; }
+.btnx { display: flex; align-items: center; justify-content: center; min-height: 48px; border-radius: 12px; font: 800 17px var(--f-display); text-decoration: none; cursor: pointer; }
+.btnx.gold { background: var(--gold); color: var(--gold-ink); border: 0; }
+.btnx.blue { background: #2F63D8; color: #fff; border: 0; }
+.btnx.ghost { border: 2px solid var(--cream); color: var(--cream); background: transparent; }
+.empty { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; color: var(--mist); }
+.past { margin-top: 36px; }
+.past summary { cursor: pointer; color: var(--mist); font-weight: 600; }
+.past ol { margin-top: 14px; opacity: .7; }
+.cta { margin-top: 32px; background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; }
+.cta p { color: var(--mist); margin: 4px 0 12px; }
+.cta a { color: var(--gold); font-weight: 700; }
+footer { text-align: center; color: var(--mist); font-size: 14px; padding: 0 0 32px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <a class="back" href="index.html"><img src="logo-96.webp" alt="" width="40" height="40">← Home</a>
+    <a class="pay" href="index.html#pay">Pay at our table</a>
+  </div>
+</header>
+<main>
+  <div class="inner">
+    <div class="eyebrow">Where to find us</div>
+    <h1>Upcoming shows</h1>
+    <p class="lede">Come by the table to buy, sell or trade Pokémon and Magic: The Gathering. Tap a flyer to see it full size.</p>
+    <div class="note" id="exampleNote" hidden>Preview: these are example shows until the real show calendar is connected.</div>
+    <ol class="shows" id="upcoming"></ol>
+    <dialog class="flyerbox" id="flyerBox"><form method="dialog"><button class="close" aria-label="Close flyer">✕</button></form><img alt=""><p class="cap"></p><div class="fbtns"><button class="btnx gold" type="button" id="flyerShare">I'm coming! Share it</button><a class="btnx blue" id="flyerPost" target="_blank" rel="noopener" hidden>Share our post to your story</a><a class="btnx ghost" id="flyerCal" target="_blank" rel="noopener">Add to my calendar</a></div></dialog>
+    <details class="past" id="pastWrap" hidden>
+      <summary>Past shows</summary>
+      <ol class="shows" id="past"></ol>
+    </details>
+    <div class="cta">
+      <div class="eyebrow">Questions about a show?</div>
+      <p>Send us a message on Instagram or email us.</p>
+      <a href="https://ig.me/m/thejonestcg">Message @thejonestcg</a> · <a href="mailto:thejonestcg@gmail.com">thejonestcg@gmail.com</a>
+    </div>
+  </div>
+</main>
+<footer>© The Jones TCG · Tampa, Florida · <a href="index.html">Home</a></footer>
+<script>
+const FALLBACK = {"example": false, "shows": [{"date": "2026-10-24", "end": "2026-10-25", "time": "Sat 10–6 · Sun 10–5", "name": "TCG Takeover: Countryside Mall", "host": "TCG Takeover", "venue": "Countryside Mall", "city": "Clearwater, FL", "address": "27001 US-19, Clearwater, FL 33761", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-10-24-countryside"}, {"date": "2026-11-01", "time": "10 AM – 5 PM", "name": "Tampa TCG Trade Day", "host": "M&M Video Games", "venue": "M&M Video Games", "city": "Tampa, FL", "address": "1548 E Fowler Ave, Tampa, FL 34668", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-01-tampa-trade-day"}, {"date": "2026-11-21", "time": "10 AM – 6 PM", "name": "TCG Takeover: Raymond James Stadium", "host": "TCG Takeover", "venue": "Raymond James Stadium", "city": "Tampa, FL", "address": "Raymond James Stadium, Tampa, FL", "admission": "Tickets $25 · kids 12 and under free", "booth": "", "flyer": "flyers/2026-11-21-raymond-james"}, {"date": "2026-11-22", "time": "10 AM – 5 PM", "name": "TCG Trade Day Riverview", "host": "M&M Video Games", "venue": "The Regent", "city": "Riverview, FL", "address": "6437 Watson Rd, Riverview, FL 33578", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-22-riverview"}]};
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function card(s) {
+  const [y, m, d] = s.date.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const li = document.createElement("li");
+  li.className = "show";
+  const date = document.createElement("div");
+  date.className = "date";
+  const endD = s.end ? Number(s.end.split("-")[2]) : null;
+  date.innerHTML = `<div class="m">${MONTHS[m - 1]}</div><div class="d">${d}${endD ? "–" + endD : ""}</div><div class="w">${DAYS[dt.getDay()]}${endD ? "–" + DAYS[(dt.getDay() + endD - d) % 7] : ""}</div>`;
+  const body = document.createElement("div");
+  const h = document.createElement("h2"); h.textContent = s.name;
+  const p = document.createElement("p"); p.textContent = [s.time, s.venue, s.city].filter(Boolean).join(" · ");
+  body.append(h, p);
+  if (s.host) { const hp = document.createElement("p"); hp.className = "host"; hp.textContent = "Hosted by " + s.host + (s.admission ? " · " + s.admission : ""); body.append(hp); }
+  if (s.address) { const a = document.createElement("a"); a.className = "more"; a.href = "https://maps.google.com/?q=" + encodeURIComponent(s.address); a.target = "_blank"; a.rel = "noopener"; a.textContent = "Directions →"; body.append(a); }
+  if (s.booth) { const b = document.createElement("span"); b.className = "booth"; b.textContent = "Table " + s.booth; body.append(b); }
+  li.append(date, body);
+  if (s.flyer) {
+    const fb = document.createElement("button"); fb.type = "button"; fb.className = "flyer"; fb.setAttribute("aria-label", "See the flyer for " + s.name);
+    fb.style.backgroundImage = `url(${s.flyer}-thumb.webp)`;
+    fb.addEventListener("click", () => openFlyer(s));
+    li.classList.add("withflyer"); li.append(fb);
+  }
+  return li;
+}
+
+function openFlyer(s) {
+  const dlg = document.getElementById("flyerBox");
+  dlg.querySelector("img").src = s.flyer + ".webp";
+  dlg.querySelector("img").alt = "Flyer: " + s.name;
+  dlg.querySelector(".cap").textContent = [s.name, s.time, s.address, s.admission, s.host ? "Hosted by " + s.host : ""].filter(Boolean).join(" · ");
+  const [ey, em, ed] = (s.end || s.date).split("-").map(Number), nx = new Date(ey, em - 1, ed + 1);
+  const k = x => x.getFullYear() + String(x.getMonth() + 1).padStart(2, "0") + String(x.getDate()).padStart(2, "0");
+  document.getElementById("flyerCal").href = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(s.name) +
+    "&dates=" + s.date.replace(/-/g, "") + "/" + k(nx) + "&location=" + encodeURIComponent(s.address || s.city || "") +
+    "&details=" + encodeURIComponent([s.time, s.admission, "Come see The Jones TCG table!"].filter(Boolean).join("\n"));
+  const sb = document.getElementById("flyerShare"); sb.textContent = "I'm coming! Share it";
+  sb.onclick = () => shareFlyer(s, sb);
+  const pb = document.getElementById("flyerPost"); pb.hidden = !s.post; if (s.post) pb.href = s.post;
+  dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", "");
+}
+
+// Phones: share the flyer image itself (Instagram Story, text, etc.). Otherwise copy a ready-made message.
+function shareFlyer(s, btn) {
+  const text = "I'm going to " + s.name + " (" + [s.time, s.city].filter(Boolean).join(", ") + "). Find @thejonestcg there!";
+  const copy = () => { try { navigator.clipboard.writeText(text).then(() => { btn.textContent = "Copied! Paste it in your story"; }); } catch (e) {} };
+  fetch(s.flyer + ".webp").then(r => r.blob()).then(b => {
+    const f = new File([b], "jones-tcg-" + s.date + ".webp", { type: b.type || "image/webp" });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) return navigator.share({ files: [f], text });
+    if (navigator.share) return navigator.share({ title: s.name, text, url: location.href.split("#")[0] });
+    copy();
+  }).catch(e => { if (!e || e.name !== "AbortError") copy(); });
+}
+
+function render(data) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const shows = (data.shows || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const isPast = s => { const [y, m, d] = (s.end || s.date).split("-").map(Number); return new Date(y, m - 1, d) < today; };
+  const up = shows.filter(s => !isPast(s)), past = shows.filter(isPast).reverse();
+  document.getElementById("exampleNote").hidden = !data.example;
+  const ul = document.getElementById("upcoming"); ul.replaceChildren();
+  if (up.length) up.forEach(s => ul.append(card(s)));
+  else { const li = document.createElement("li"); li.className = "empty"; li.textContent = "No shows booked right now. Follow @thejonestcg on Instagram for the next one."; ul.append(li); }
+  const pl = document.getElementById("past"); pl.replaceChildren();
+  past.forEach(s => pl.append(card(s)));
+  document.getElementById("pastWrap").hidden = !past.length;
+}
+
+render(FALLBACK);
+fetch("shows.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.shows) render(d); }).catch(() => {});
+</script>
+</body>
+</html>

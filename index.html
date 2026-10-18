@@ -1,0 +1,441 @@
+<title>The Jones TCG</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Figtree:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Layout: customer-first brand page. Sticky action bar (Pay / Sell) on top, big on phones;
+   badge on the navy card pattern; Buy-Sell-Trade tape; When (calendar) + How to reach us;
+   Instagram; Pay; What we do; We're buying. Section rhythm after Start Bootstrap "Landing Page" (MIT).
+   Single brand look on purpose: navy + gold like the booth signage. */
+:root {
+  color-scheme: dark;
+  --navy-900: #071338;
+  --navy-800: #0B1C55;
+  --navy-700: #13297A;
+  --blue: #2F63D8;
+  --gold: #F6C431;
+  --gold-deep: #B88A00;
+  --gold-ink: #1A1300;
+  --cream: #FBF6EA;
+  --ink-on-cream: #0B1C55;
+  --mist: #B9C6EE;
+  --line: rgba(185,198,238,.18);
+  --note: #FFE7A0;
+  --f-display: "Baloo 2", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+body { background: var(--navy-900); color: var(--cream); font-family: var(--f-body); font-size: 17px; line-height: 1.55; }
+a { color: inherit; }
+.inner { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 800; line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h2 { font-size: clamp(30px, 6vw, 44px); }
+h3 { font-size: 24px; }
+p { margin: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.lede { color: var(--mist); max-width: 58ch; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+.todo { display: inline-block; font-family: var(--f-mono); font-size: 11px; font-weight: 700; background: var(--note); color: var(--gold-ink); border-radius: 4px; padding: 1px 6px; vertical-align: middle; letter-spacing: .03em; }
+
+/* Preview note */
+.preview { background: var(--note); color: var(--gold-ink); font-size: 14px; }
+.preview .inner { padding-block: 6px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.preview b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+
+/* Action bar: the reason most people are here */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--navy-900); }
+.actionbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--navy-900) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.actionbar .inner { display: flex; align-items: center; gap: 10px; padding-block: 8px; }
+.actionbar .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; font-family: var(--f-display); font-weight: 800; font-size: 19px; margin-right: auto; }
+.actionbar .brand img { width: 40px; height: auto; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 999px; font-weight: 700; font-size: 16px; text-decoration: none; border: 2px solid transparent; cursor: pointer; font-family: var(--f-body); text-align: center; }
+.btn.gold { background: var(--gold); color: var(--gold-ink); box-shadow: 0 4px 0 var(--gold-deep); }
+.btn.gold:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--gold-deep); }
+.btn.ghost { border-color: var(--cream); color: var(--cream); background: transparent; }
+.btn.blue { background: var(--blue); color: #FFFFFF; }
+.btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.paybig { font-family: var(--f-display); font-size: 20px; }
+
+@media (max-width: 699px) {
+  .actionbar .brand { display: none; }
+  .actionbar .inner { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .actionbar .paybig { min-height: 72px; font-size: 26px; border-radius: 16px; }
+  .actionbar .sellsmall { min-height: 72px; padding: 0 14px; font-size: 14px; border-radius: 16px; line-height: 1.15; }
+  /* One-second "you're probably here to pay" nod on load */
+  .actionbar .paybig { animation: nod 1.6s ease-out .15s both; }
+  @keyframes nod { 0% { min-height: 30vh; font-size: 40px; } 62% { min-height: 30vh; font-size: 40px; } 100% { min-height: 72px; font-size: 26px; } }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .actionbar .paybig { animation: none; } * { transition: none !important; } }
+
+/* Hero */
+.hero { position: relative; background: var(--navy-800) url("pattern.webp") center / 520px auto repeat; overflow: hidden; }
+.hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 0 38%, color-mix(in srgb, var(--navy-900) 70%, transparent) 100%); pointer-events: none; }
+.hero .inner { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; gap: 14px; padding-block: 28px 32px; }
+.hero .badge { width: min(84vw, 460px); height: auto; filter: drop-shadow(0 16px 26px rgba(0,0,0,.5)); }
+.hero .where { font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--cream); }
+.hero h1 { font-size: clamp(22px, 4.5vw, 30px); color: var(--mist); font-weight: 700; }
+.tape { height: 64px; background: var(--navy-900) url("tape.webp") center / auto 100% repeat-x; border-block: 2px solid var(--gold); }
+
+/* Sections */
+section.band .inner { padding-block: 44px; display: grid; gap: 24px; }
+section.band + section.band .inner { border-top: 1px solid var(--line); }
+.head { display: grid; gap: 8px; }
+
+/* When + How */
+.duo { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .duo { grid-template-columns: 1.25fr .75fr; align-items: start; } }
+.panel { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-head h3 { font-size: 22px; }
+#when { gap: 10px; }
+#when .head { gap: 2px; }
+.cal-nav { display: flex; gap: 6px; }
+.iconbtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--navy-700); color: var(--cream); font-size: 18px; cursor: pointer; display: grid; place-items: center; }
+.iconbtn:hover { background: var(--blue); }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-variant-numeric: tabular-nums; }
+.cal .dow { font-family: var(--f-mono); font-size: 11px; color: var(--mist); letter-spacing: .08em; padding-bottom: 2px; }
+.cal .day { height: 34px; max-width: 100%; border-radius: 8px; display: grid; place-items: center; font-weight: 600; font-size: 14px; color: var(--mist); border: 1px solid transparent; padding: 0; background: transparent; font-family: var(--f-body); }
+.cal .day.blank { visibility: hidden; }
+.cal .day.today { border-color: var(--line); color: var(--cream); }
+.cal button.day.show { background: var(--gold); color: var(--gold-ink); font-weight: 800; cursor: pointer; position: relative; }
+.cal button.day.show[aria-pressed="true"] { outline: 3px solid var(--cream); outline-offset: 1px; }
+.cal .day.past { opacity: .4; }
+.ticket { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; background: var(--cream); color: var(--ink-on-cream); border-radius: 12px; padding: 8px 12px; text-decoration: none; }
+.ticket .date { text-align: center; font-family: var(--f-display); font-weight: 800; line-height: .95; padding-right: 12px; border-right: 2px dashed #C9D1EE; }
+.ticket .m { display: block; font-size: 13px; letter-spacing: .1em; color: var(--blue); }
+.ticket .d { display: block; font-size: 28px; }
+.ticket .n { font-weight: 700; font-size: 16px; line-height: 1.2; }
+.ticket .v { font-size: 13px; color: #3A4670; line-height: 1.3; }
+.ticket { cursor: pointer; }
+[hidden] { display: none !important; }
+.ticket .f { font-size: 12px; font-weight: 700; color: var(--blue); margin-top: 2px; }
+.ticket .thumb { width: 54px; height: 70px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 6px rgba(7,19,56,.3); }
+.cal button.day.hasflyer { background-color: var(--gold); background-size: cover; background-position: center top; color: #fff; text-shadow: 0 1px 3px #000, 0 0 8px #000; box-shadow: inset 0 0 0 2px var(--gold); font-size: 16px; }
+.flyerbox { border: 0; padding: 12px; background: var(--navy-800); color: var(--cream); border-radius: 16px; max-width: min(520px, 94vw); max-height: 94vh; overflow: auto; }
+@media (max-width: 699px) { .flyerbox { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding: 12px 12px max(16px, env(safe-area-inset-bottom)); } }
+.flyerbox::backdrop { background: rgba(3,8,26,.8); }
+.flyerbox img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.flyerbox .fbtns { display: grid; gap: 8px; margin: 4px 0 10px; }
+.flyerbox .cap { font-size: 14px; color: var(--mist); margin: 10px 2px 6px; }
+.flyerbox form { position: sticky; top: 0; text-align: right; height: 0; }
+.flyerbox .close { width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(0,0,0,.5); border-radius: 50%; border: 0; background: var(--cream); color: var(--navy-800); font-size: 18px; font-weight: 800; cursor: pointer; margin: 6px; }
+.cal-foot { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.allshows { font-weight: 700; color: var(--gold); text-decoration: none; }
+.allshows:hover { text-decoration: underline; }
+.how .btn { width: 100%; }
+.copyrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.addr { font-family: var(--f-mono); font-weight: 700; word-break: break-all; }
+button.copy { font: 700 13px var(--f-mono); text-transform: uppercase; letter-spacing: .05em; padding: 7px 12px; border-radius: 999px; border: 2px solid currentColor; background: transparent; color: inherit; cursor: pointer; }
+.small { font-size: 14px; color: var(--mist); }
+
+/* Instagram */
+.ig-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: end; }
+.ig-grid { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 860px) { .ig-grid { grid-template-columns: repeat(6, 1fr); } }
+.ig-grid a.post { padding: 0; overflow: hidden; position: relative; }
+.ig-grid a.post img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-grid a.post .vid { position: absolute; top: 6px; right: 6px; background: rgba(7,19,56,.75); color: #fff; border-radius: 6px; font-size: 11px; padding: 1px 6px; }
+.ig-grid a { aspect-ratio: 1; max-width: 100%; border-radius: 10px; background: var(--navy-800) url("pattern.webp") center / 260px auto; border: 1px solid var(--line); display: grid; place-items: center; text-decoration: none; color: var(--mist); font-family: var(--f-mono); font-size: 11px; text-align: center; padding: 6px; }
+
+/* Pay */
+.pay-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.method { background: var(--cream); color: var(--ink-on-cream); border-radius: var(--r); padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+.method .info { min-width: 0; display: grid; gap: 10px; }
+.method .name { font-family: var(--f-display); font-weight: 800; font-size: 28px; line-height: 1; }
+.method .handle { font-family: var(--f-mono); font-weight: 700; font-size: 15px; word-break: break-all; }
+.method .how { font-size: 14px; color: #3A4670; }
+.method .btn { justify-self: start; }
+.qr { width: 108px; height: 108px; background: #FFFFFF; border: 2px solid #D8DEF2; border-radius: 12px; padding: 7px; display: grid; place-items: center; }
+.qr img, .qr canvas { width: 90px !important; height: 90px !important; }
+.qr.empty { font-family: var(--f-mono); font-size: 10px; text-align: center; color: #4A5580; line-height: 1.3; }
+
+/* What we do */
+.pillars { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.pillar { background: var(--navy-800); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 6px; align-content: start; }
+.pillar .word { font-family: var(--f-display); font-weight: 800; font-size: 32px; line-height: 1; }
+.pillar:nth-child(2) .word { color: var(--gold); }
+.pillar:nth-child(3) .word { color: #7FA6FF; }
+.pillar p { color: var(--mist); }
+
+/* We're buying */
+.sell { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .sell { grid-template-columns: 1.1fr .9fr; align-items: start; } }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; counter-increment: s; }
+.steps li::before { content: counter(s); width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 20px; }
+.steps b { display: block; }
+.steps span { color: var(--mist); }
+.sendnote { font-size: 15px; color: var(--mist); text-align: center; }
+.sendnote b { color: var(--cream); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.chips li { font-size: 14px; font-weight: 600; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; color: var(--mist); }
+
+footer { background: #040B24; border-top: 2px solid var(--gold); }
+footer .inner { padding-block: 28px; display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 700px) { footer .inner { grid-template-columns: auto 1fr auto; align-items: center; } }
+footer .fbrand { display: flex; gap: 12px; align-items: center; }
+footer .fbrand img { width: 60px; height: auto; }
+footer nav { display: flex; gap: 14px; flex-wrap: wrap; }
+footer nav a { color: var(--mist); font-weight: 600; text-decoration: none; }
+footer nav a:hover { color: var(--cream); }
+</style>
+
+
+
+<header class="actionbar">
+  <div class="inner">
+    <a class="brand" href="#top"><img src="logo-96.webp" alt="" width="40" height="33">The Jones TCG</a>
+    <a class="btn gold paybig" href="#pay">Pay at our table</a>
+    <a class="btn ghost sellsmall" href="#sell">Sell us your cards</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-label="The Jones TCG">
+    <div class="inner">
+      <img class="badge" src="logo.webp" alt="The Jones TCG" width="720" height="591">
+      <p class="where">Tampa, Florida · Pokémon &amp; Magic: The Gathering</p>
+    </div>
+  </section>
+
+  <div class="tape" role="img" aria-label="Buy, Sell, Trade"></div>
+
+  <section class="band" aria-labelledby="whenH">
+    <div class="inner">
+      <div class="duo">
+        <div class="panel" id="when">
+          <div class="cal-head">
+            <div class="head"><p class="eyebrow">When</p><h3 id="whenH"><span id="calMonth">Month</span></h3></div>
+            <div class="cal-nav">
+              <button class="iconbtn" type="button" id="calPrev" aria-label="Previous month">‹</button>
+              <button class="iconbtn" type="button" id="calNext" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div class="cal" id="calGrid" role="grid" aria-label="Show calendar"></div>
+          <a class="ticket" id="calTicket" href="shows.html"></a>
+          <dialog class="flyerbox" id="flyerBox"><form method="dialog"><button class="close" aria-label="Close flyer">✕</button></form><img alt=""><p class="cap"></p><div class="fbtns"><button class="btn gold" type="button" id="flyerShare">I'm coming! Share it</button><a class="btn blue" id="flyerPost" target="_blank" rel="noopener" hidden>Share our post to your story</a><a class="btn ghost" id="flyerCal" target="_blank" rel="noopener">Add to my calendar</a></div><a class="allshows" href="shows.html">See all upcoming shows →</a></dialog>
+          <div class="cal-foot">
+            <span class="small">Tap a show day to see its flyer. <span class="todo" id="exampleTag">EXAMPLE SHOWS</span></span>
+            <a class="allshows" href="shows.html">See all upcoming shows →</a>
+          </div>
+        </div>
+        <div class="panel how" aria-labelledby="howH">
+          <div class="head"><p class="eyebrow">Talk to us</p><h3 id="howH">How to reach us</h3></div>
+          <a class="btn gold" href="https://ig.me/m/thejonestcg" target="_blank" rel="noopener">Message us on Instagram</a>
+          <a class="btn ghost" href="mailto:thejonestcg@gmail.com">Email us</a>
+          <div class="copyrow small"><span class="addr" id="emailAddr">thejonestcg@gmail.com</span><button class="copy" type="button" id="copyEmail" data-target="emailAddr">Copy</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="instagram" aria-labelledby="igH">
+    <div class="inner">
+      <div class="ig-head">
+        <div class="head"><p class="eyebrow">@thejonestcg</p><h2 id="igH">Fresh off the table</h2></div>
+        <a class="btn ghost" href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Follow on Instagram</a>
+      </div>
+      <div class="ig-grid" aria-label="Latest Instagram posts">
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+        <a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Latest post</a>
+      </div>
+      
+    </div>
+  </section>
+
+  <section class="band" id="pay" aria-labelledby="payH">
+    <div class="inner">
+      <div class="head">
+        <p class="eyebrow">At our table</p>
+        <h2 id="payH">Pay at our table</h2>
+        <p class="lede">Tap your app. Put the item or your name in the note, then show us the confirmation screen.</p>
+      </div>
+      <div class="pay-grid">
+        <div class="method">
+          <div class="info"><span class="name">Venmo</span><span class="handle">@nicholas-jones-40</span>
+            <a class="btn blue" href="https://venmo.com/code?user_id=1785136802693120791" target="_blank" rel="noopener">Open Venmo</a></div>
+          <div class="qr" id="qrVenmo" aria-label="Venmo QR code"></div>
+        </div>
+        <div class="method">
+          <div class="info"><span class="name">Cash App</span><span class="handle">$monke3y101</span>
+            <a class="btn blue" href="https://cash.app/$monke3y101" target="_blank" rel="noopener">Open Cash App</a></div>
+          <div class="qr" id="qrCash" aria-label="Cash App QR code"></div>
+        </div>
+        <div class="method">
+          <div class="info"><span class="name">PayPal</span><span class="handle">@njones0707</span><span class="how">Shows as Nicholas Jones</span>
+            <a class="btn blue" href="https://paypal.me/njones0707" target="_blank" rel="noopener">Open PayPal</a></div>
+          <div class="qr" id="qrPaypal" aria-label="PayPal QR code"></div>
+        </div>
+        <div class="method">
+          <div class="info"><span class="name">Zelle</span>
+            <div class="copyrow"><span class="handle" id="zelleAddr">thejonestcg@gmail.com</span><button class="copy" type="button" id="copyZelle" data-target="zelleAddr">Copy</button></div>
+            <p class="how">Zelle lives inside your bank's app. Copy our email, open your bank app, tap Zelle, and paste it in as the recipient.</p></div>
+        </div>
+        <div class="method">
+          <div class="info"><span class="name">Cash</span><p class="how">Always welcome at the table.</p></div>
+        </div>
+      </div>
+      <p class="small">On someone else's phone? Scan the code. On your own phone? Tap the button.</p>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="whatH">
+    <div class="inner">
+      <div class="head"><p class="eyebrow">Who we are</p><h2 id="whatH">What we do</h2>
+        <p class="lede">The Jones TCG is a Tampa card business run by two partners. We bring sealed Pokémon and Magic product, graded slabs and singles to card shows, and we're always buying and trading.</p></div>
+      <div class="pillars">
+        <div class="pillar"><span class="word">Buy</span><p>Booster boxes, ETBs, collection boxes and singles.</p></div>
+        <div class="pillar"><span class="word">Sell</span><p>We buy sealed, graded slabs, binders and whole collections.</p></div>
+        <div class="pillar"><span class="word">Trade</span><p>Bring what you've got and trade toward anything in the case.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="sell" aria-labelledby="sellH">
+    <div class="inner">
+      <div class="head"><p class="eyebrow">We're buying</p><h2 id="sellH">Sell us your cards</h2>
+        <p class="lede">Message us before a show and we'll have an offer ready when you get to the table.</p></div>
+      <div class="sell">
+        <ol class="steps">
+          <li><div><b>Snap a few photos</b><span>Fronts and backs for singles, the label for slabs, all sides for sealed. A pile shot works for a big collection.</span></div></li>
+          <li><div><b>Tell us your price</b><span>Have a number in mind? Send it, it helps us move fast. Not sure? Just say so and we'll make you an offer.</span></div></li>
+          <li><div><b>Get an offer</b><span>We reply with a price or a time to meet at our next show.</span></div></li>
+        </ol>
+        <div class="panel how">
+          <p class="sendnote"><b>In your message:</b> 📸 photos &nbsp;·&nbsp; 💲 your asking price</p>
+          <a class="btn gold" href="https://ig.me/m/thejonestcg" target="_blank" rel="noopener">Message us on Instagram</a>
+          <a class="btn ghost" href="mailto:thejonestcg@gmail.com?subject=Cards%20to%20sell&amp;body=What%20I%20have%3A%0A%0AMy%20asking%20price%3A%0A%0A(Photos%20attached)">Email us</a>
+          <ul class="chips" aria-label="What we buy"><li>Booster boxes</li><li>ETBs</li><li>Graded slabs</li><li>Singles</li><li>Collections</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="inner">
+    <div class="fbrand"><img src="logo-96.webp" alt="" width="60" height="49"><div><b>The Jones TCG</b><div class="small">Tampa, Florida · Buy · Sell · Trade</div></div></div>
+    <nav aria-label="Footer"><a href="#pay">Pay</a><a href="#sell">Sell to us</a><a href="shows.html">Shows</a><a href="https://www.instagram.com/thejonestcg" target="_blank" rel="noopener">Instagram</a></nav>
+    <div class="small">© The Jones TCG</div>
+  </div>
+</footer>
+
+<script>
+var FALLBACK_SHOWS = {"example": false, "shows": [{"date": "2026-10-24", "end": "2026-10-25", "time": "Sat 10–6 · Sun 10–5", "name": "TCG Takeover: Countryside Mall", "host": "TCG Takeover", "venue": "Countryside Mall", "city": "Clearwater, FL", "address": "27001 US-19, Clearwater, FL 33761", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-10-24-countryside"}, {"date": "2026-11-01", "time": "10 AM – 5 PM", "name": "Tampa TCG Trade Day", "host": "M&M Video Games", "venue": "M&M Video Games", "city": "Tampa, FL", "address": "1548 E Fowler Ave, Tampa, FL 34668", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-01-tampa-trade-day"}, {"date": "2026-11-21", "time": "10 AM – 6 PM", "name": "TCG Takeover: Raymond James Stadium", "host": "TCG Takeover", "venue": "Raymond James Stadium", "city": "Tampa, FL", "address": "Raymond James Stadium, Tampa, FL", "admission": "Tickets $25 · kids 12 and under free", "booth": "", "flyer": "flyers/2026-11-21-raymond-james"}, {"date": "2026-11-22", "time": "10 AM – 5 PM", "name": "TCG Trade Day Riverview", "host": "M&M Video Games", "venue": "The Regent", "city": "Riverview, FL", "address": "6437 Watson Rd, Riverview, FL 33578", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-22-riverview"}]};
+(function () {
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var SHORT = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var today = new Date(); today.setHours(0,0,0,0);
+  var shows = [], view = new Date(today.getFullYear(), today.getMonth(), 1), picked = null;
+  function key(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  function parse(s) { var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function ticket(s) {
+    var t = document.getElementById('calTicket');
+    if (!s) { t.hidden = true; return; }
+    var d = parse(s.date); t.hidden = false;
+    t.innerHTML = '<div class="date"><span class="m">' + SHORT[d.getMonth()] + '</span><span class="d">' + d.getDate() + (s.end ? '–' + parse(s.end).getDate() : '') + '</span></div>' +
+      '<div class="tx"><div class="n"></div><div class="v"></div><div class="f"></div></div>';
+    t.querySelector('.n').textContent = s.name;
+    t.querySelector('.v').textContent = [s.time, s.venue, s.city].filter(Boolean).join(' · ');
+    t.querySelector('.f').textContent = s.flyer ? 'Tap to see the flyer' : (s.booth ? 'Table ' + s.booth : '');
+    t.onclick = function (e) { if (!s.flyer) return; e.preventDefault(); openFlyer(s); };
+  }
+  function openFlyer(s) {
+    var dlg = document.getElementById('flyerBox');
+    dlg.querySelector('img').src = s.flyer + '.webp';
+    dlg.querySelector('img').alt = 'Flyer: ' + s.name;
+    dlg.querySelector('.cap').textContent = [s.name, s.time, s.address, s.admission, s.host ? 'Hosted by ' + s.host : ''].filter(Boolean).join(' · ');
+    var ds = s.date.replace(/-/g, ''), de = (s.end || s.date).split('-').map(Number), nx = new Date(de[0], de[1]-1, de[2]+1);
+    document.getElementById('flyerCal').href = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(s.name) +
+      '&dates=' + ds + '/' + key(nx).replace(/-/g, '') + '&location=' + encodeURIComponent(s.address || s.city || '') +
+      '&details=' + encodeURIComponent([s.time, s.admission, 'Come see The Jones TCG table!'].filter(Boolean).join('\n'));
+    var sb = document.getElementById('flyerShare'); sb.textContent = "I'm coming! Share it";
+    sb.onclick = function () { shareFlyer(s, sb); };
+    var pb = document.getElementById('flyerPost'); pb.hidden = !s.post; if (s.post) pb.href = s.post;
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  // Phones: share the flyer image itself (Instagram Story, text, etc.). Otherwise copy a ready-made message.
+  function shareFlyer(s, btn) {
+    var text = "I'm going to " + s.name + ' (' + [s.time, s.city].filter(Boolean).join(', ') + '). Find @thejonestcg there!';
+    function copy() { try { navigator.clipboard.writeText(text).then(function () { btn.textContent = 'Copied! Paste it in your story'; }); } catch (e) {} }
+    fetch(s.flyer + '.webp').then(function (r) { return r.blob(); }).then(function (b) {
+      var f = new File([b], 'jones-tcg-' + s.date + '.webp', { type: b.type || 'image/webp' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) return navigator.share({ files: [f], text: text });
+      if (navigator.share) return navigator.share({ title: s.name, text: text, url: location.href.split('#')[0] });
+      copy();
+    }).catch(function (e) { if (!e || e.name !== 'AbortError') copy(); });
+  }
+  function onDay(k) { return shows.filter(function (x) { return x.date === k || (x.end && x.date <= k && k <= x.end); })[0]; }
+  function render() {
+    document.getElementById('calMonth').textContent = MONTHS[view.getMonth()] + ' ' + view.getFullYear();
+    var g = document.getElementById('calGrid'); g.innerHTML = '';
+    'SMTWTFS'.split('').forEach(function (c) { var e = document.createElement('div'); e.className = 'dow'; e.textContent = c; g.appendChild(e); });
+    var first = view.getDay(), days = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+    for (var i = 0; i < first; i++) { var b = document.createElement('div'); b.className = 'day blank'; g.appendChild(b); }
+    for (var d = 1; d <= days; d++) {
+      var date = new Date(view.getFullYear(), view.getMonth(), d), k = key(date);
+      var s = onDay(k);
+      var el = document.createElement(s ? 'button' : 'div');
+      el.className = 'day' + (s ? ' show' : '') + (date < today ? ' past' : '') + (+date === +today ? ' today' : '');
+      el.textContent = d;
+      if (s) {
+        el.type = 'button'; el.setAttribute('aria-pressed', picked === s ? 'true' : 'false');
+        el.setAttribute('aria-label', d + ' ' + MONTHS[view.getMonth()] + ': ' + s.name);
+        if (s.flyer) { el.classList.add('hasflyer'); el.style.backgroundImage = 'url(' + s.flyer + '-thumb.webp)'; }
+        (function (sh) { el.addEventListener('click', function () { picked = sh; ticket(sh); render(); if (sh.flyer) openFlyer(sh); }); })(s);
+      }
+      g.appendChild(el);
+    }
+  }
+  function start(data) {
+    shows = (data.shows || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    document.getElementById('exampleTag').hidden = !data.example;
+    var next = shows.filter(function (s) { return parse(s.end || s.date) >= today; })[0];
+    picked = next || null;
+    if (next) view = new Date(parse(next.date).getFullYear(), parse(next.date).getMonth(), 1);
+    ticket(picked); render();
+  }
+  document.getElementById('calPrev').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth()-1, 1); render(); });
+  document.getElementById('calNext').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth()+1, 1); render(); });
+  start(FALLBACK_SHOWS);
+  try { fetch('shows.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j) start(j); }).catch(function () {}); } catch (e) {}
+
+  // Instagram strip: 6 newest posts from the free Behold JSON feed (refreshes daily). Placeholders stay if it can't load.
+  fetch('https://feeds.behold.so/MSqzfFZR6xmMGJ0Kg9Ok').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j || !j.posts || !j.posts.length) return;
+    var g = document.querySelector('.ig-grid'); g.innerHTML = '';
+    j.posts.slice(0, 6).forEach(function (p) {
+      var a = document.createElement('a'); a.className = 'post'; a.href = p.permalink; a.target = '_blank'; a.rel = 'noopener';
+      var img = document.createElement('img'); img.loading = 'lazy'; img.alt = p.prunedCaption || 'Instagram post';
+      img.src = (p.sizes && p.sizes.small && p.sizes.small.mediaUrl) || p.thumbnailUrl || p.mediaUrl;
+      a.appendChild(img);
+      if (p.mediaType === 'VIDEO') { var v = document.createElement('span'); v.className = 'vid'; v.textContent = '▶'; a.appendChild(v); }
+      g.appendChild(a);
+    });
+  }).catch(function () {});
+
+  function qr(id, text) { var el = document.getElementById(id); if (!el || typeof QRCode === 'undefined') return;
+    new QRCode(el, { text: text, width: 180, height: 180, colorDark: '#071338', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M }); }
+  qr('qrVenmo', 'https://venmo.com/code?user_id=1785136802693120791');
+  qr('qrPaypal', 'https://paypal.me/njones0707');
+  qr('qrCash', 'https://cash.app/$monke3y101');
+
+  document.querySelectorAll('button.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.getAttribute('data-target')), t = el.textContent.trim();
+      function done() { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); }
+      function fallback() { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Selected'; }
+      try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>

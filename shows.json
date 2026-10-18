@@ -1,0 +1,7 @@
+{"example": false,
+ "shows": [
+  {"date": "2026-10-24", "end": "2026-10-25", "time": "Sat 10–6 · Sun 10–5", "name": "TCG Takeover: Countryside Mall", "host": "TCG Takeover", "venue": "Countryside Mall", "city": "Clearwater, FL", "address": "27001 US-19, Clearwater, FL 33761", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-10-24-countryside"},
+  {"date": "2026-11-01", "time": "10 AM – 5 PM", "name": "Tampa TCG Trade Day", "host": "M&M Video Games", "venue": "M&M Video Games", "city": "Tampa, FL", "address": "1548 E Fowler Ave, Tampa, FL 34668", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-01-tampa-trade-day"},
+  {"date": "2026-11-21", "time": "10 AM – 6 PM", "name": "TCG Takeover: Raymond James Stadium", "host": "TCG Takeover", "venue": "Raymond James Stadium", "city": "Tampa, FL", "address": "Raymond James Stadium, Tampa, FL", "admission": "Tickets $25 · kids 12 and under free", "booth": "", "flyer": "flyers/2026-11-21-raymond-james"},
+  {"date": "2026-11-22", "time": "10 AM – 5 PM", "name": "TCG Trade Day Riverview", "host": "M&M Video Games", "venue": "The Regent", "city": "Riverview, FL", "address": "6437 Watson Rd, Riverview, FL 33578", "admission": "Free admission", "booth": "", "flyer": "flyers/2026-11-22-riverview"}
+ ]}

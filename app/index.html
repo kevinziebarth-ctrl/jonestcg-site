@@ -36,6 +36,13 @@ input.s{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
 #sheet.open{transform:none}#sheet .big{font-size:34px;font-weight:800}
 .setup{padding:18px;max-width:480px;margin:auto;overflow-y:auto}.setup input{display:block;width:100%;margin:6px 0 12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
 .msg{padding:20px;color:var(--mute);text-align:center;grid-column:1/-1}
+/* PC: bar on top, more cards per row. Phones and tablets keep the bar at the bottom. */
+@media (min-width:900px) and (hover:hover) and (pointer:fine){
+#app header{order:-1;border-top:0;border-bottom:1px solid var(--line);padding:8px 12px}
+#grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:6px 12px 14px}
+#top{padding:8px 12px 4px}
+#sheet{left:50%;right:auto;width:520px;margin-left:-260px}
+}
 </style></head><body>
 <div id="app" hidden>
 <div id="top"><b id="cnt"></b><span id="when"></span></div>
@@ -58,18 +65,21 @@ var items=[],type='ALL',brand='',mode='all',take={};try{take=JSON.parse(LS.g('ta
 function price(p){return p<25?Math.ceil(p-1e-9):Math.ceil(p/5-1e-9)*5}
 function ago(iso){if(!iso)return '';var t=new Date(iso.replace(' ','T'));if(isNaN(t))return '';var d=(Date.now()-t)/864e5;return d<1?'today':d<2?'1d ago':Math.floor(d)+'d ago'}
 function fmt(iso){var t=new Date(iso.replace(' ','T'));return isNaN(t)?'':(t.getMonth()+1)+'/'+t.getDate()+' '+((t.getHours()%12)||12)+':'+('0'+t.getMinutes()).slice(-2)+(t.getHours()<12?'a':'p')}
+// Taking marks follow the product, not the sheet row, so a sort in the sheet cannot move them.
+function K(i){return i.pid?'p'+i.pid:'n'+(i.name+'|'+i.brand+'|'+i.type).toLowerCase()}
+function mig(){var ch=0;Object.keys(take).forEach(function(k){if(!/^\d+$/.test(k))return;var i=items.filter(function(x){return x.row==k})[0];delete take[k];if(i)take[K(i)]=1;ch=1});if(ch)LS.s('take',JSON.stringify(take))}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function load(){
   var u=APP,pin=LS.g('pin');if(!pin){$('app').hidden=true;$('setupBox').hidden=false;return}
   $('setupBox').hidden=true;$('app').hidden=false;$('app').style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
-  var cached=LS.g('items');if(cached){try{items=JSON.parse(cached);render()}catch(e){}}else $('grid').innerHTML='<div class="msg">Loading...</div>';
+  var cached=LS.g('items');if(cached){try{items=JSON.parse(cached);mig();render()}catch(e){}}else $('grid').innerHTML='<div class="msg">Loading...</div>';
   fetch(u,{method:'POST',body:JSON.stringify({action:'show',pin:pin}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
     if(!j.ok){if(j.error==='bad pin'){LS.s('pin','');LS.s('user','');$('app').hidden=true;$('setupBox').hidden=false;$('err').textContent='Username or PIN did not work.';return}throw new Error(j.error)}
-    items=j.items;LS.s('items',JSON.stringify(items));LS.s('at',j.at);render()
+    if(items.length)mig();items=j.items;mig();LS.s('items',JSON.stringify(items));LS.s('at',j.at);render()
   }).catch(function(e){$('when').textContent='Offline, showing saved list'})
 }
 function filt(){var q=$('q').value.trim().toLowerCase();return items.filter(function(i){
-  if(type!=='ALL'&&i.type!==type)return false;if(brand&&i.brand!==brand)return false;if(mode==='take'&&!take[i.row])return false;
+  if(type!=='ALL'&&i.type!==type)return false;if(brand&&i.brand!==brand)return false;if(mode==='take'&&!take[K(i)])return false;
   return !q||(i.name+' '+i.brand+' '+i.type).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return a.type.localeCompare(b.type)||a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name)})}
 function render(){
   var list=filt(),g=$('grid');g.innerHTML='';
@@ -79,7 +89,7 @@ function render(){
   list.forEach(function(i){var t=i.type||'Other';
     if(t!==lt){var h=document.createElement('div');h.className='th';h.id='sec-'+encodeURIComponent(t);h.innerHTML='<div>'+esc(t)+'</div><span>'+cnt[t]+' items</span>';f.appendChild(h);lt=t;lb=null}
     if(i.brand!==lb){var bh=document.createElement('div');bh.className='bh';bh.textContent=(i.brand||'Other')+' ('+bc[t+'|'+i.brand]+')';f.appendChild(bh);lb=i.brand}
-var b=document.createElement('div');b.setAttribute('role','button');b.tabIndex=0;b.className='c'+(take[i.row]?' take':'');b.dataset.r=i.row;
+var b=document.createElement('div');b.setAttribute('role','button');b.tabIndex=0;b.className='c'+(take[K(i)]?' take':'');b.dataset.r=i.row;
     var ini=i.name.split(/\s+/).slice(0,2).map(function(w){return w[0]}).join('');
     b.innerHTML='<div class="ini">'+esc(ini)+'</div>'+(i.pid?'<img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+i.pid+'_200w.jpg" onerror="this.remove()">':'')+'<div class="t">'+esc(i.name)+'</div><div class="p"><b><i>$</i>'+price(i.price)+'</b><span>x'+i.qty+'</span></div>';
     f.appendChild(b)});g.appendChild(f);
@@ -102,9 +112,9 @@ $('drawer').onclick=function(e){var b=e.target.closest('button');if(!b)return;
 $('mode').onclick=function(){mode=mode==='all'?'take':'all';render()};
 $('rf').onclick=load;$('q').oninput=render;
 $('grid').onclick=function(e){var c=e.target.closest('.c');if(!c)return;var i=items.filter(function(x){return x.row==c.dataset.r})[0];if(!i)return;
-  var st=ago(i.pulled);$('sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><b>'+esc(i.name)+'</b><div style="color:var(--mute)">'+esc(i.brand)+' &middot; '+esc(i.type)+'</div></div><div class="big">$'+price(i.price)+'</div></div><p style="color:var(--mute)">In stock: '+i.qty+(i.pulled?' &middot; TCGplayer price pulled '+fmt(i.pulled)+' ('+st+')':'')+(i.price?' &middot; market $'+i.price.toFixed(2):'')+'</p><button id="tk" class="'+(take[i.row]?'on':'')+'" style="width:100%">'+(take[i.row]?'Taking to the show (tap to remove)':'Take to show')+'</button>';
+  var st=ago(i.pulled);$('sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><b>'+esc(i.name)+'</b><div style="color:var(--mute)">'+esc(i.brand)+' &middot; '+esc(i.type)+'</div></div><div class="big">$'+price(i.price)+'</div></div><p style="color:var(--mute)">In stock: '+i.qty+(i.pulled?' &middot; TCGplayer price pulled '+fmt(i.pulled)+' ('+st+')':'')+(i.price?' &middot; market $'+i.price.toFixed(2):'')+'</p><button id="tk" class="'+(take[K(i)]?'on':'')+'" style="width:100%">'+(take[K(i)]?'Taking to the show (tap to remove)':'Take to show')+'</button>';
   $('sheet').classList.add('open');$('shade').classList.add('open');
-  $('tk').onclick=function(){if(take[i.row])delete take[i.row];else take[i.row]=1;LS.s('take',JSON.stringify(take));$('sheet').classList.remove('open');$('shade').classList.remove('open');render()}};
+  $('tk').onclick=function(){if(take[K(i)])delete take[K(i)];else take[K(i)]=1;LS.s('take',JSON.stringify(take));$('sheet').classList.remove('open');$('shade').classList.remove('open');render()}};
 $('go').onclick=function(){var u=$('u').value.trim().toLowerCase(),p=$('pn').value.trim();if(u!=='jones'||!p){$('err').textContent='Enter the username and PIN.';return}LS.s('user','jones');LS.s('pin',p);$('err').textContent='';load()};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/app/sw.js').catch(function(){});
 load();

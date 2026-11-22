@@ -41,7 +41,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .gc .pc{font-weight:700;font-size:13px}.gc .sm{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gc button{margin-top:auto;width:100%;padding:8px 2px;font-size:13px}
 .gc .op{display:block;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 2px;font-size:13px;color:var(--acc);text-decoration:none;min-height:36px}
-.gc.hot{border-color:var(--acc);background:rgba(242,182,48,.10)}
+.gc.hot{border-color:var(--acc);background:rgba(242,182,48,.10)}[hidden]{display:none!important}.gc.sel{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok) inset}
 .nr{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}.nr input{margin-top:3px;width:20px;height:20px;flex:none}.nr>span{min-width:0;flex:1}.nr>span>*{display:block}.nr .old{text-decoration:line-through;font-size:13px}.nr .sm{font-size:12px}
 /* PC: nav on top. Phones and tablets keep it at the bottom. */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
@@ -63,7 +63,7 @@ main{order:2}
 <section class="v" id="v-show"><h2>Show mode <span class="badge b-live">Live</span></h2><p class="lead">Phone price list for shows. Built and working.</p><a href="/app/"><button class="go">Open Show Mode</button></a></section>
 
 <section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-live">Live</span></h2><p class="lead">Preview shows the new order and changes nothing. Test on a copy proves the sort and the Undo on two TEST tabs. Sort for real makes a backup first.</p>
-<div class="row"><select id="spTab"><option>Inventory - Sealed</option></select><label>Quantity <select id="spQty"><option value="high">Most first</option><option value="low">Fewest first</option><option value="off">Not used</option></select></label><button class="go" id="spGo">Preview result</button><button id="spTest">Test on a copy</button><button id="spRun">Sort for real</button><button id="spUndo">Undo last sort</button></div>
+<div class="row"><select id="spTab"><option>Inventory - Sealed</option></select><label>Quantity <select id="spQty"><option value="high">Most first</option><option value="low">Fewest first</option><option value="off">Not used</option></select></label><label>Type <select id="spType"><option value="off">Not used</option><option value="on">Used</option></select></label><button class="go" id="spGo">Preview result</button><button id="spTest">Test on a copy</button><button id="spRun">Sort for real</button><button id="spUndo">Undo last sort</button></div>
 <div id="spAsk" class="card" hidden></div>
 <div id="spMsg" class="note">Order: quantity, then brand, then type, then name. Quantity 0 always goes last. Tap Preview result to see it.</div>
 <div id="spLock"></div>
@@ -80,10 +80,11 @@ main{order:2}
 <div class="card"><b>1. Upload photos</b><div class="mute">Photo goes to the site.</div></div><div class="card"><b>2. Confirm the match</b><div class="mute">Pick the right card from the link matcher queue.</div></div><div class="card"><b>3. Paid and trade note</b><div class="mute">Trade note doubles as the card's notes. Flag "Sending to PSA".</div></div>
 <div class="row"><button disabled>Send all to the sheet and site</button><button disabled>Make PSA submission list</button></div></section>
 
-<section class="v" id="v-links"><h2>Link matcher <span class="badge b-live">Live</span></h2><p class="lead">Products with no TCGplayer link. Each one gets up to 3 guesses with how sure the match is. Anything 90% or better is highlighted. Tap Use this on the right one and the link is saved to the sheet. The product takes its full TCGplayer name, and the picture and price follow.</p>
+<section class="v" id="v-links"><h2>Link matcher <span class="badge b-live">Live</span></h2><p class="lead">Products with no TCGplayer link. Each one gets up to 3 guesses with how sure the match is. Anything 90% or better is already picked for you. Tap Pick this to change a pick or to pick one yourself, then tap Apply links at the bottom to save them all at once. Each product takes its full TCGplayer name, and the picture and price follow.</p>
 <div class="row"><button class="go" id="lkGo">Load the list</button><label><input type="checkbox" id="lkStock" checked> In stock only</label></div>
-<div id="lkMsg" class="note">Tap Load the list. Nothing is saved until you tap Use this.</div>
+<div id="lkMsg" class="note">Tap Load the list. Nothing is saved until you tap Apply links.</div>
 <div id="lkOut"></div>
+<div class="row" id="lkBar" hidden><button class="go" id="lkApply" disabled>Apply 0 links</button><span id="lkApMsg" class="mute"></span></div>
 <h2 style="margin-top:26px">Names <span class="badge b-live">Live</span></h2><p class="lead">Every linked product takes its full TCGplayer name, and the sheet gets a Set column. Check names shows every change first and writes nothing.</p>
 <div class="row"><button class="go" id="nmDry">Check names</button><button id="nmGo" disabled>Update names now</button><button id="nmUndo">Undo names</button></div>
 <div id="nmAsk" class="card" hidden></div>
@@ -126,7 +127,7 @@ function show(p){
   var o=p.options||{},blank=p.list.filter(function(r){return !r.name}).length,h='';
   h+='<div class="grid"><div class="card"><div class="mute">Rows</div><div class="n">'+p.rows+'</div></div><div class="card"><div class="mute">Would move</div><div class="n">'+p.moved+'</div></div><div class="card"><div class="mute">Quantity 0'+(o.zeroLast?' (go last)':'')+'</div><div class="n">'+p.zero+'</div></div></div>';
   if(p.cache){var c=p.cache;h+='<h3>Prices attached to the right product</h3><div class="card"><b class="'+(c.off?'warn':'ok')+'">'+c.lined+' matched, '+c.off+' not matched</b> <span class="mute">&middot; '+c.noId+' rows have no TCGplayer link yet</span>'+(c.shifted?'<div class="mute" style="margin-top:6px">'+c.shifted+' matched rows read their price from a different row number in '+esc(c.name)+'. Prices are right today, but a sort has to carry that link with each row. The Run step will handle it.</div>':'')+(c.off?'<table style="margin-top:8px"><tr><th>Row</th><th>Product</th><th>Reads '+esc(c.name)+' row</th><th>Found there</th></tr>'+c.offList.map(function(r){return '<tr><td>'+r.row+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.cacheRow)+'</td><td class="warn">'+esc(r.cacheId||'no price row')+'</td></tr>'}).join('')+'</table>'+(c.off>c.offList.length?'<div class="mute">and '+(c.off-c.offList.length)+' more</div>':''):'')+'</div>'}
-  h+='<h3>Sorted by</h3><div class="card">'+(o.qty==='off'?'':'Quantity ('+(o.qty==='low'?'fewest first':'most first')+'), then ')+'brand, then type, then name.'+(o.zeroLast?' Quantity 0 goes last.':'')+'</div>';
+  h+='<h3>Sorted by</h3><div class="card">'+(o.zeroLast?'In stock first, quantity 0 at the bottom. Then ':'')+(o.qty==='off'?'':'quantity ('+(o.qty==='low'?'fewest first':'most first')+'), then ')+'brand, then '+(o.type==='on'?'type, then ':'')+'name A to Z.</div>';
   h+='<h3>Brand order</h3><div class="card">'+(String(o.brandDir).indexOf('Custom')===0?chips(o.brandOrder||[]):esc(o.brandDir))+(p.unlistedBrands&&p.unlistedBrands.length?'<div class="warn" style="margin-top:6px">Not in your list, go last: '+esc(p.unlistedBrands.join(', '))+'</div>':'')+'</div>';
   h+='<h3>Type order</h3><div class="card">'+(String(o.typeDir).indexOf('Custom')===0?chips(o.typeOrder||[]):esc(o.typeDir))+(p.unlistedTypes&&p.unlistedTypes.length?'<div class="warn" style="margin-top:6px">Not in your list, go last: '+esc(p.unlistedTypes.join(', '))+'</div>':'')+'</div>';
   h+='<h3>Order after sorting'+(blank?' ('+blank+' blank rows go to the bottom)':'')+'</h3><div class="card" style="overflow-x:auto"><table><tr><th>New row</th><th>Was</th><th>Brand</th><th>Type</th><th>Product</th><th>Qty</th></tr>';
@@ -134,7 +135,7 @@ function show(p){
   h+='</table></div>';$('spOut').innerHTML=h;
   $('spMsg').textContent='Preview only. Nothing was changed in the sheet. Checked '+new Date(p.at).toLocaleString()+'.';
 }
-function busy(on){['spGo','spTest','spRun','spUndo','spQty'].forEach(function(i){$(i).disabled=on})}
+function busy(on){['spGo','spTest','spRun','spUndo','spQty','spType'].forEach(function(i){$(i).disabled=on})}
 function why(e){return e==='bad pin'?'The PIN did not work. Sign in again in Show Mode.':e==='unknown action'?'The sheet script does not have this step yet.':e==='locked'?'Locked. Sort for real and Undo stay off until a real PIN replaces the test PIN.':e==='blocked'?'Stopped before changing anything: some formulas would break if rows moved. They are listed below.':e==='confirm missing'?'That needs a second tap to confirm.':String(e)}
 function post(body,msg,done){
   var pin=g('pin');if(!pin){$('spMsg').innerHTML='Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.';return}
@@ -150,7 +151,8 @@ function status(){post({action:'sortStatus'},'',function(j){statusShow(j)})}
 function statusShow(j){var s=j.status||{},b=(s.backups||[]).slice().reverse(),h='';
   h+='<div class="card"><b class="'+(s.locked?'warn':'ok')+'">'+(s.locked?'Sort for real is locked':'Sort for real is unlocked')+'</b> <span class="mute">&middot; '+(s.locked?'it turns on when a real PIN replaces the test PIN. Preview and Test on a copy work now.':'every sort makes a backup first.')+'</span>';
   if(b.length)h+='<table style="margin-top:8px"><tr><th>Sorted</th><th>Backup tab</th><th></th></tr>'+b.map(function(e){return '<tr><td>'+esc(when(e.at))+'</td><td>'+esc(e.tabBackup)+'</td><td class="mute">'+(e.undone?'undone':'')+'</td></tr>'}).join('')+'</table><div class="mute">The last 6 backups are kept as tabs in the sheet.</div>';
-  if(s.qty)$('spQty').value=s.qty;$('spLock').innerHTML=h+'</div>'}
+  if(s.qty)$('spQty').value=s.qty;if(s.type)$('spType').value=s.type;$('spLock').innerHTML=h+'</div>'}
+$('spType').onchange=function(){$('spAsk').hidden=true;post({action:'sortSet',type:$('spType').value},'Saving the order...',function(j){if(j.status&&j.status.error){$('spMsg').textContent=j.status.error;return}statusShow(j);$('spGo').click()})};
 $('spQty').onchange=function(){$('spAsk').hidden=true;post({action:'sortSet',qty:$('spQty').value},'Saving the order...',function(j){if(j.status&&j.status.error){$('spMsg').textContent=j.status.error;return}statusShow(j);$('spGo').click()})};
 function ask(text,yes,fn){var a=$('spAsk');a.innerHTML='<div>'+text+'</div><div class="row" style="margin-top:10px"><button class="go" id="spYes">'+yes+'</button><button id="spNo">Cancel</button></div>';a.hidden=false;
   $('spNo').onclick=function(){a.hidden=true};$('spYes').onclick=function(){a.hidden=true;fn()}}
@@ -193,29 +195,36 @@ function lkCard(r){
   if(r.state==='loading')return h+'<div class="mute" style="margin-top:6px">Looking for matches...</div>';
   var G=(r.g&&r.g.guesses)||[];
   if(!G.length)h+='<div class="mute" style="margin-top:6px">'+esc((r.g&&r.g.note)||'No close match in the product list. Paste the link below.')+'</div>';
-  if(G.length){h+='<div class="g3">';G.slice(0,3).forEach(function(x,i){var pc=Math.round(x.score*100),hot=pc>=90;h+='<div class="gc'+(hot?' hot':'')+'"><img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(x.pid)+'_400w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</div><div class="pc'+(hot?' ok':'')+'">'+pc+'% sure</div><div class="sm">'+money(x.price)+'</div><div class="sm mute">'+esc(x.set)+'</div><button class="'+(hot?'go':'')+'" data-act="use" data-row="'+r.row+'" data-i="'+i+'">Use this</button><a class="op" target="_blank" rel="noopener" href="'+esc(x.url)+'">Open &#8599;</a></div>'});h+='</div>'}
+  if(G.length){h+='<div class="g3">';G.slice(0,3).forEach(function(x,i){var pc=Math.round(x.score*100),hot=pc>=90;h+='<div class="gc'+(hot?' hot':'')+(r.sel===i?' sel':'')+'"><img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(x.pid)+'_400w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</div><div class="pc'+(hot?' ok':'')+'">'+pc+'% sure</div><div class="sm">'+money(x.price)+'</div><div class="sm mute">'+esc(x.set)+'</div><button class="'+(r.sel===i?'go':'')+'" data-act="pick" data-row="'+r.row+'" data-i="'+i+'">'+(r.sel===i?'Picked &#10003;':'Pick this')+'</button><a class="op" target="_blank" rel="noopener" href="'+esc(x.url)+'">Open &#8599;</a></div>'});h+='</div>'}
   return h+'<div class="gs"><input type="text" placeholder="Or paste a TCGplayer product link" data-paste="'+r.row+'"><button data-act="paste" data-row="'+r.row+'">Save link</button><a target="_blank" rel="noopener" style="color:var(--acc)" href="https://www.tcgplayer.com/search/all/product?q='+encodeURIComponent(r.name+' '+(r.type==='Unique'?'':r.type))+'">Search</a></div>'}
 function lkDraw(r){var el=$('lk-'+r.row);if(el)el.innerHTML=lkCard(r)}
 function lkShown(){var st=$('lkStock').checked;return LK.filter(function(r){return !st||r.qty>0})}
 function lkAll(){var l=lkShown();$('lkOut').innerHTML=l.map(function(r){return '<div class="card" id="lk-'+r.row+'">'+lkCard(r)+'</div>'}).join('')||'<div class="card ok">Nothing left to link here.</div>'}
 function lkNext(run){if(run!==lkRun)return;var r=lkShown().filter(function(x){return x.state==='wait'})[0];
-  if(!r){$('lkMsg').textContent='All matches loaded. Nothing is saved until you tap Use this.';return}
+  if(!r){$('lkMsg').textContent='All matches loaded. Nothing is saved until you tap Apply links.';return}
   r.state='loading';lkDraw(r);
-  api({action:'linkGuess',name:r.name,brand:r.brand,type:r.type}).then(function(j){r.g=j.guess;r.state='ready'},function(e){r.g={guesses:[],note:lkErr(e)};r.state='ready'}).then(function(){lkDraw(r);lkNext(run)})}
+  api({action:'linkGuess',name:r.name,brand:r.brand,type:r.type}).then(function(j){r.g=j.guess;r.sel=(r.g.best&&r.g.guesses&&r.g.guesses.length)?0:null;r.state='ready'},function(e){r.g={guesses:[],note:lkErr(e)};r.state='ready'}).then(function(){lkDraw(r);lkCount();lkNext(run)})}
 $('lkGo').onclick=function(){var run=++lkRun;$('lkMsg').textContent='Reading the sheet...';$('lkGo').disabled=true;
   api({action:'linkList'}).then(function(j){$('lkGo').disabled=false;var L=j.links;LK=L.list.map(function(r){r.state='wait';return r});
-    $('lkMsg').textContent=L.linked+' of '+L.rows+' products have a link. '+L.inStock+' in stock still need one. Finding matches...';lkAll();lkNext(run)},
+    $('lkMsg').textContent=L.linked+' of '+L.rows+' products have a link. '+L.inStock+' in stock still need one. Finding matches...';lkAll();lkCount();lkNext(run)},
   function(e){$('lkGo').disabled=false;$('lkMsg').textContent=lkErr(e)})};
-$('lkStock').onchange=function(){lkAll();lkNext(lkRun)};
-$('lkOut').onclick=function(e){var b=e.target.closest('button[data-act]');if(!b)return;var r=LK.filter(function(x){return x.row==b.dataset.row})[0];if(!r)return;
-  var act=b.dataset.act,body={row:r.row,name:r.name,brand:r.brand,type:r.type},pick=null;
-  if(act==='undo'){body.action='linkUndo';body.url=r.saved.url;body.was=r.saved.was;body.priced=r.saved.priced;body.renamed=r.saved.renamed;body.oldName=r.saved.oldName;b.disabled=true;
-    api(body).then(function(j){if(j.undo&&j.undo.error){r.msg=lkErr(j.undo.error);lkDraw(r);return}if(r.saved.renamed)r.name=r.saved.oldName;r.state='ready';r.saved=null;r.msg='';lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)});return}
-  if(act==='use'){pick=r.g.guesses[Number(b.dataset.i)];body.url=pick.url;body.cat=pick.cat;body.gid=pick.gid}
-  else{var inp=$('lkOut').querySelector('input[data-paste="'+r.row+'"]');body.url=(inp.value||'').trim().split('?')[0];if(!body.url){r.msg='Paste the link first.';lkDraw(r);return}}
-  body.action='linkSave';body.rename=true;[].forEach.call($('lk-'+r.row).querySelectorAll('button'),function(x){x.disabled=true});
-  api(body).then(function(j){var s=j.save;if(s.error){r.msg=lkErr(s.error);lkDraw(r);return}
-    r.msg='';r.state='saved';r.saved={url:s.url,was:s.was,pid:s.pid,priced:s.priced,price:s.price,name:s.name||(pick&&pick.name),renamed:!!s.renamed,oldName:s.oldName};if(s.renamed)r.name=s.name;lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)})};
+$('lkStock').onchange=function(){lkAll();lkCount();lkNext(lkRun)};
+var lkBusy=false;
+function lkPicked(){return lkShown().filter(function(r){return r.state==='ready'&&r.sel!=null&&r.g&&r.g.guesses[r.sel]})}
+function lkCount(){var n=lkPicked().length;$('lkBar').hidden=!LK.length;$('lkApply').textContent='Apply '+n+' link'+(n===1?'':'s');$('lkApply').disabled=lkBusy||!n}
+function lkSave(r,pick,url){var body={action:'linkSave',rename:true,row:r.row,name:r.name,brand:r.brand,type:r.type,url:url};if(pick){body.cat=pick.cat;body.gid=pick.gid}
+  return api(body).then(function(j){var s=j.save;if(s.error){r.msg=lkErr(s.error);lkDraw(r);return false}
+    r.msg='';r.state='saved';r.sel=null;r.saved={url:s.url,was:s.was,pid:s.pid,priced:s.priced,price:s.price,name:s.name||(pick&&pick.name),renamed:!!s.renamed,oldName:s.oldName};if(s.renamed)r.name=s.name;lkDraw(r);return true},function(e){r.msg=lkErr(e);lkDraw(r);return false})}
+$('lkOut').onclick=function(e){var b=e.target.closest('button[data-act]');if(!b||lkBusy)return;var r=LK.filter(function(x){return x.row==b.dataset.row})[0];if(!r)return;
+  var act=b.dataset.act;
+  if(act==='pick'){var i=Number(b.dataset.i);r.sel=r.sel===i?null:i;lkDraw(r);lkCount();return}
+  if(act==='undo'){var body={action:'linkUndo',row:r.row,name:r.name,brand:r.brand,type:r.type,url:r.saved.url,was:r.saved.was,priced:r.saved.priced,renamed:r.saved.renamed,oldName:r.saved.oldName};b.disabled=true;
+    api(body).then(function(j){if(j.undo&&j.undo.error){r.msg=lkErr(j.undo.error);lkDraw(r);return}if(r.saved.renamed)r.name=r.saved.oldName;r.state='ready';r.saved=null;r.msg='';lkDraw(r);lkCount()},function(e){r.msg=lkErr(e);lkDraw(r)});return}
+  var inp=$('lkOut').querySelector('input[data-paste="'+r.row+'"]'),url=(inp.value||'').trim().split('?')[0];if(!url){r.msg='Paste the link first.';lkDraw(r);return}
+  [].forEach.call($('lk-'+r.row).querySelectorAll('button'),function(x){x.disabled=true});lkSave(r,null,url).then(lkCount)};
+$('lkApply').onclick=function(){var L=lkPicked(),n=L.length,k=0,ok=0;if(!n||lkBusy)return;lkBusy=true;lkCount();
+  (function next(){if(k>=n){lkBusy=false;lkCount();$('lkApMsg').textContent='Saved '+ok+' of '+n+' links.'+(ok<n?' The ones that did not save say why on their card.':' Each card has an Undo.');return}
+    var r=L[k++];$('lkApMsg').textContent='Saving '+k+' of '+n+'...';var pick=r.g.guesses[r.sel];lkSave(r,pick,pick.url).then(function(y){if(y)ok++;next()})})()};
 
 // ---- Names ----
 var NM=null,NMFLAG={dup:'Two rows share this link. Check it before renaming.',low:'The two names look very different. Check the link before renaming.'};

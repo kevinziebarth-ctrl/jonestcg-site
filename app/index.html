@@ -2,13 +2,12 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#10131a">
+<meta name="theme-color" content="#0a1330">
 <title>Jones TCG Show Mode</title>
 <link rel="manifest" href="/app/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
-:root{--bg:#10131a;--panel:#1a1f2b;--line:#2a3142;--ink:#eef1f7;--mute:#9aa3b5;--acc:#f6c445;--ok:#3ecf8e}
-@media (prefers-color-scheme:light){:root{--bg:#f2f4f9;--panel:#fff;--line:#d9dee9;--ink:#111827;--mute:#5b6478;--acc:#b8860b;--ok:#0a8f55}}
+:root{color-scheme:dark;--bg:#0a1330;--panel:#121d40;--line:#24325f;--ink:#eef1f7;--mute:#9fb0d6;--acc:#f2b630;--ok:#3ecf8e}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font:14px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
 header{display:flex;gap:6px;align-items:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
@@ -24,7 +23,7 @@ input.s{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
 .c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .c .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--mute);font-size:22px;padding:4px;text-align:center}
 .c .p{position:absolute;left:0;right:0;bottom:0;padding:14px 5px 3px;background:linear-gradient(transparent,rgba(0,0,0,.82));display:flex;justify-content:space-between;align-items:flex-end;color:#fff}
-.c .p b{font-size:20px;line-height:1}.c .p b i{font-size:12px;font-style:normal;vertical-align:top}
+.c .p b{font-size:20px;line-height:1;color:var(--acc)}.c .p b i{font-size:12px;font-style:normal;vertical-align:top}
 .c .p span{font-size:10px;opacity:.85}
 .c .t{position:absolute;top:3px;left:3px;right:3px;font-size:9px;color:#fff;background:rgba(0,0,0,.55);border-radius:4px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .c.take{outline:3px solid var(--ok);outline-offset:-3px}.c.take::after{content:"\2713";position:absolute;top:3px;right:3px;background:var(--ok);color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;text-align:center;line-height:18px}

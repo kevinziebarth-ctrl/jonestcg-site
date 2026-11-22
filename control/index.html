@@ -47,17 +47,10 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 
 <section class="v" id="v-show"><h2>Show mode <span class="badge b-live">Live</span></h2><p class="lead">Phone price list for shows. Built and working.</p><a href="/app/"><button class="go">Open Show Mode</button></a></section>
 
-<section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-tpl">Template &middot; priority 1</span></h2><p class="lead">Sort the sheet, re-align PriceCache, with a backup first and an Undo. Preview shows the result before anything is touched.</p>
-<h3>Tabs to sort</h3><div class="card"><label><input type="checkbox" checked> Inventory - Sealed</label><br><label><input type="checkbox"> Singles Page</label><br><label><input type="checkbox"> MISC ITEMS</label></div>
-<h3>Steps</h3><div class="card">
-<div class="step"><input type="checkbox" checked disabled><div><b>Backup first</b><div class="mute">Copies the tab, keeps the last 6. Always on.</div></div></div>
-<div class="step"><input type="checkbox" checked><div><b>Sort</b><div class="mute">Brand order, then type order, then name.</div></div></div>
-<div class="step"><input type="checkbox" checked><div><b>Re-align PriceCache</b><div class="mute">Fixes rows that moved so prices follow their product.</div></div></div>
-<div class="step"><input type="checkbox"><div><b>Clean PriceCache</b><div class="mute">Clears #N/A and #REF! rows after you review them.</div></div></div></div>
-<h3>Brand order</h3><div class="card drag"><span>Pokemon</span><span>Magic</span><span>One Piece</span><span>Lorcana</span><span>Other</span></div>
-<h3>Type order</h3><div class="card drag"><span>Elite Trainer Box</span><span>Booster Box</span><span>Bundle</span><span>Pack</span><span>Other</span></div>
-<div class="row" style="margin-top:10px"><button>Preview result</button><button class="go" disabled>Run selected</button><button disabled>Undo last run</button></div>
-<div class="note">Wiring (first build): new "sortPreview" action returns the first rows in the new order and changes nothing. "sortRun" is a second step, makes the backup, then writes. Drag order saved in Script Properties.</div></section>
+<section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-live">Preview live</span></h2><p class="lead">Preview reads your sheet and shows the sorted order. It changes nothing. Run, backup and Undo come next.</p>
+<div class="row"><select id="spTab"><option>Inventory - Sealed</option></select><button class="go" id="spGo">Preview result</button><button disabled>Run selected</button><button disabled>Undo last run</button></div>
+<div id="spMsg" class="note">Tap Preview result. Sort options come from the CONTROLS tab in the sheet.</div>
+<div id="spOut"></div></section>
 
 <section class="v" id="v-prices"><h2>Prices <span class="badge b-tpl">Template &middot; priority 2</span></h2><p class="lead">Refresh status, freshness per row, what changed. The price source is a setting so a feed can be swapped without touching the sheet.</p>
 <div class="grid"><div class="card"><div class="mute">Last refresh</div><div class="n warn">Sep 16</div><div class="mute">67 days ago, stale</div></div><div class="card"><div class="mute">Rows with a price</div><div class="n">145 / 232</div><div class="mute">25 errors, 62 missing</div></div></div>
@@ -99,4 +92,30 @@ v.forEach(function(x){document.getElementById('v-'+x).classList.toggle('on',x===
 [].forEach.call(document.querySelectorAll('#nav a'),function(a){var on=a.getAttribute('href')==='#'+h;a.classList.toggle('on',on);if(on)a.scrollIntoView({inline:'center',block:'nearest'})});
 document.querySelector('main').scrollTop=0}
 window.addEventListener('hashchange',go);go()})();
+
+(function(){var APP='https://script.google.com/macros/s/AKfycbwF083GAceTjY_wIxnv3cnfIdJPKsy6ND8nqyNv01DDGdpTqn0HJ-XT4zft50BsR0vJHQ/exec';
+function g(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function $(i){return document.getElementById(i)}
+function chips(a){return a.length?'<div class="drag" style="text-transform:capitalize">'+a.map(function(x,i){return '<span>'+(i+1)+'. '+esc(x)+'</span>'}).join('')+'</div>':'<span class="mute">A to Z</span>'}
+function show(p){
+  if(p.error){$('spMsg').textContent=p.error;return}
+  var o=p.options||{},blank=p.list.filter(function(r){return !r.name}).length,h='';
+  h+='<div class="grid"><div class="card"><div class="mute">Rows</div><div class="n">'+p.rows+'</div></div><div class="card"><div class="mute">Would move</div><div class="n">'+p.moved+'</div></div><div class="card"><div class="mute">Quantity 0'+(o.zeroLast?' (go last)':'')+'</div><div class="n">'+p.zero+'</div></div></div>';
+  if(p.cache){var c=p.cache;h+='<h3>Prices attached to the right product</h3><div class="card"><b class="'+(c.off?'warn':'ok')+'">'+c.lined+' matched, '+c.off+' not matched</b> <span class="mute">&middot; '+c.noId+' rows have no TCGplayer link yet</span>'+(c.shifted?'<div class="mute" style="margin-top:6px">'+c.shifted+' matched rows read their price from a different row number in '+esc(c.name)+'. Prices are right today, but a sort has to carry that link with each row. The Run step will handle it.</div>':'')+(c.off?'<table style="margin-top:8px"><tr><th>Row</th><th>Product</th><th>Reads '+esc(c.name)+' row</th><th>Found there</th></tr>'+c.offList.map(function(r){return '<tr><td>'+r.row+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.cacheRow)+'</td><td class="warn">'+esc(r.cacheId||'no price row')+'</td></tr>'}).join('')+'</table>'+(c.off>c.offList.length?'<div class="mute">and '+(c.off-c.offList.length)+' more</div>':''):'')+'</div>'}
+  h+='<h3>Brand order</h3><div class="card">'+(String(o.brandDir).indexOf('Custom')===0?chips(o.brandOrder||[]):esc(o.brandDir))+(p.unlistedBrands&&p.unlistedBrands.length?'<div class="warn" style="margin-top:6px">Not in your list, go last: '+esc(p.unlistedBrands.join(', '))+'</div>':'')+'</div>';
+  h+='<h3>Type order</h3><div class="card">'+(String(o.typeDir).indexOf('Custom')===0?chips(o.typeOrder||[]):esc(o.typeDir))+(p.unlistedTypes&&p.unlistedTypes.length?'<div class="warn" style="margin-top:6px">Not in your list, go last: '+esc(p.unlistedTypes.join(', '))+'</div>':'')+'</div>';
+  h+='<h3>Order after sorting'+(blank?' ('+blank+' blank rows go to the bottom)':'')+'</h3><div class="card" style="overflow-x:auto"><table><tr><th>New row</th><th>Was</th><th>Brand</th><th>Type</th><th>Product</th><th>Qty</th></tr>';
+  var lb=null;p.list.forEach(function(r){if(!r.name)return;var k=r.brand+'|'+r.type;h+='<tr'+(k!==lb&&lb!==null?' style="border-top:2px solid var(--acc)"':'')+'><td>'+r.to+'</td><td class="'+(r.to!==r.from?'warn':'mute')+'">'+r.from+'</td><td>'+esc(r.brand)+'</td><td>'+esc(r.type)+'</td><td>'+esc(r.name)+'</td><td>'+r.qty+'</td></tr>';lb=k});
+  h+='</table></div>';$('spOut').innerHTML=h;
+  $('spMsg').textContent='Preview only. Nothing was changed in the sheet. Checked '+new Date(p.at).toLocaleString()+'.';
+}
+$('spGo').onclick=function(){
+  var pin=g('pin');if(!pin||g('user')!=='jones'){$('spMsg').innerHTML='Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.';return}
+  $('spMsg').textContent='Reading the sheet...';$('spGo').disabled=true;
+  fetch(APP,{method:'POST',body:JSON.stringify({action:'sortPreview',pin:pin,tab:$('spTab').value}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
+    $('spGo').disabled=false;
+    if(!j.ok){$('spMsg').textContent=j.error==='bad pin'?'The PIN did not work. Sign in again in Show Mode.':j.error==='unknown action'?'The sheet script does not have the preview step yet.':'Error: '+j.error;return}
+    show(j.preview)}).catch(function(){$('spGo').disabled=false;$('spMsg').textContent='Could not reach the sheet. Check the connection and try again.'})};
+})();
 </script></body></html>

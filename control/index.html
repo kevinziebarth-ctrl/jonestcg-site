@@ -111,7 +111,7 @@ function show(p){
   $('spMsg').textContent='Preview only. Nothing was changed in the sheet. Checked '+new Date(p.at).toLocaleString()+'.';
 }
 $('spGo').onclick=function(){
-  var pin=g('pin');if(!pin||g('user')!=='jones'){$('spMsg').innerHTML='Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.';return}
+  var pin=g('pin');if(!pin){$('spMsg').innerHTML='Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.';return}
   $('spMsg').textContent='Reading the sheet...';$('spGo').disabled=true;
   fetch(APP,{method:'POST',body:JSON.stringify({action:'sortPreview',pin:pin,tab:$('spTab').value}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
     $('spGo').disabled=false;

@@ -34,7 +34,14 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .err{color:var(--bad)}.warn{color:var(--warn)}.ok{color:var(--ok)}
 .gs{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.gs img,.gs .ph{width:64px;height:64px;flex:0 0 64px;object-fit:contain;background:rgba(255,255,255,.06);border-radius:6px}.gs .x{flex:1;min-width:0}.gs button{flex:0 0 auto}
 .gs input[type=text]{flex:1;min-width:0}
-.gs.hot{border:1px solid var(--acc);border-radius:8px;padding:8px;background:rgba(242,182,48,.10);margin-top:6px}.gs .pc{font-size:1.05em}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px -4px}
+.gc{display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:10px;padding:4px;min-width:0}
+.gc img{width:100%;aspect-ratio:1;max-height:260px;object-fit:contain;background:rgba(255,255,255,.06);border-radius:6px}
+.gc .nm{font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:3.75em}
+.gc .pc{font-weight:700;font-size:13px}.gc .sm{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc button{margin-top:auto;width:100%;padding:8px 2px;font-size:13px}
+.gc .op{display:block;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 2px;font-size:13px;color:var(--acc);text-decoration:none;min-height:36px}
+.gc.hot{border-color:var(--acc);background:rgba(242,182,48,.10)}
 /* PC: nav on top. Phones and tablets keep it at the bottom. */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
 nav{order:1;border-top:0;border-bottom:1px solid var(--line);padding:6px 14px;justify-content:center}
@@ -180,7 +187,7 @@ function lkCard(r){
   if(r.state==='loading')return h+'<div class="mute" style="margin-top:6px">Looking for matches...</div>';
   var G=(r.g&&r.g.guesses)||[];
   if(!G.length)h+='<div class="mute" style="margin-top:6px">'+esc((r.g&&r.g.note)||'No close match in the product list. Paste the link below.')+'</div>';
-  G.slice(0,3).forEach(function(x,i){var pc=Math.round(x.score*100),hot=pc>=90;h+='<div class="gs'+(hot?' hot':'')+'"><img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(x.pid)+'_200w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="x"><div>'+esc(x.name)+'</div><div class="mute"><b class="pc'+(hot?' ok':'')+'">'+pc+'% sure</b> &middot; '+esc(x.set)+' &middot; '+money(x.price)+'</div></div><button class="'+(hot?'go':'')+'" data-act="use" data-row="'+r.row+'" data-i="'+i+'">Use this</button></div>'});
+  if(G.length){h+='<div class="g3">';G.slice(0,3).forEach(function(x,i){var pc=Math.round(x.score*100),hot=pc>=90;h+='<div class="gc'+(hot?' hot':'')+'"><img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(x.pid)+'_400w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="nm" title="'+esc(x.name)+'">'+esc(x.name)+'</div><div class="pc'+(hot?' ok':'')+'">'+pc+'% sure</div><div class="sm">'+money(x.price)+'</div><div class="sm mute">'+esc(x.set)+'</div><button class="'+(hot?'go':'')+'" data-act="use" data-row="'+r.row+'" data-i="'+i+'">Use this</button><a class="op" target="_blank" rel="noopener" href="'+esc(x.url)+'">Open &#8599;</a></div>'});h+='</div>'}
   return h+'<div class="gs"><input type="text" placeholder="Or paste a TCGplayer product link" data-paste="'+r.row+'"><button data-act="paste" data-row="'+r.row+'">Save link</button><a target="_blank" rel="noopener" style="color:var(--acc)" href="https://www.tcgplayer.com/search/all/product?q='+encodeURIComponent(r.name+' '+(r.type==='Unique'?'':r.type))+'">Search</a></div>'}
 function lkDraw(r){var el=$('lk-'+r.row);if(el)el.innerHTML=lkCard(r)}
 function lkShown(){var st=$('lkStock').checked;return LK.filter(function(r){return !st||r.qty>0})}

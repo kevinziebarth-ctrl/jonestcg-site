@@ -92,7 +92,7 @@ function drawer(){
   var h='<button data-t="ALL" class="'+(type==='ALL'?'on':'')+'">All <span>'+items.length+'</span></button><h4>Type</h4>';
   Object.keys(types).sort().forEach(function(t){h+='<button data-t="'+esc(t)+'" class="'+(type===t&&!brand?'on':'')+'">'+esc(t)+' <span>'+types[t].n+'</span></button>';
     if(type===t)Object.keys(types[t].b).sort().forEach(function(b){h+='<button data-t="'+esc(t)+'" data-b="'+esc(b)+'" class="'+(brand===b?'on':'')+'" style="padding-left:24px">'+esc(b)+' <span>'+types[t].b[b]+'</span></button>'})});
-  h+='<h4>Device</h4><button id="reset">Sign out</button><button id="clr">Clear Taking marks</button>';$('drawer').innerHTML=h}
+  h+='<h4>Go to</h4><a href="/control/" style="display:block;padding:10px;border:1px solid var(--line);border-radius:10px;color:var(--acc);text-decoration:none;margin:2px 0">Control Room</a><h4>Device</h4><button id="reset">Sign out</button><button id="clr">Clear Taking marks</button>';$('drawer').innerHTML=h}
 function open(on){$('drawer').classList.toggle('open',on);$('shade').classList.toggle('open',on);if(on)drawer()}
 $('menu').onclick=function(){open(true)};$('shade').onclick=function(){open(false);$('sheet').classList.remove('open')};
 $('drawer').onclick=function(e){var b=e.target.closest('button');if(!b)return;

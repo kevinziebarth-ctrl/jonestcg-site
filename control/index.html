@@ -32,6 +32,11 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .drag{display:flex;gap:6px;flex-wrap:wrap}.drag span{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}.drag span:before{content:"\2630  ";color:var(--mute)}
 .note{border-left:3px solid var(--acc);padding:6px 10px;color:var(--mute);margin:10px 0;font-size:13px}
 .err{color:var(--bad)}.warn{color:var(--warn)}.ok{color:var(--ok)}
+/* PC: nav on top. Phones and tablets keep it at the bottom. */
+@media (min-width:900px) and (hover:hover) and (pointer:fine){
+nav{order:1;border-top:0;border-bottom:1px solid var(--line);padding:6px 14px;justify-content:center}
+main{order:2}
+}
 </style></head><body>
 <div id="top"><b>TCG Control Room</b><span><a href="/app/" style="color:var(--acc);text-decoration:none;border:1px solid var(--acc);border-radius:99px;padding:4px 10px">Show Mode &rarr;</a></span></div>
 <main>
@@ -47,9 +52,12 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 
 <section class="v" id="v-show"><h2>Show mode <span class="badge b-live">Live</span></h2><p class="lead">Phone price list for shows. Built and working.</p><a href="/app/"><button class="go">Open Show Mode</button></a></section>
 
-<section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-live">Preview live</span></h2><p class="lead">Preview reads your sheet and shows the sorted order. It changes nothing. Run, backup and Undo come next.</p>
-<div class="row"><select id="spTab"><option>Inventory - Sealed</option></select><button class="go" id="spGo">Preview result</button><button disabled>Run selected</button><button disabled>Undo last run</button></div>
+<section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-live">Live</span></h2><p class="lead">Preview shows the new order and changes nothing. Test on a copy proves the sort and the Undo on two TEST tabs. Sort for real makes a backup first.</p>
+<div class="row"><select id="spTab"><option>Inventory - Sealed</option></select><button class="go" id="spGo">Preview result</button><button id="spTest">Test on a copy</button><button id="spRun">Sort for real</button><button id="spUndo">Undo last sort</button></div>
+<div id="spAsk" class="card" hidden></div>
 <div id="spMsg" class="note">Tap Preview result. Sort options come from the CONTROLS tab in the sheet.</div>
+<div id="spLock"></div>
+<div id="spRes"></div>
 <div id="spOut"></div></section>
 
 <section class="v" id="v-prices"><h2>Prices <span class="badge b-tpl">Template &middot; priority 2</span></h2><p class="lead">Refresh status, freshness per row, what changed. The price source is a setting so a feed can be swapped without touching the sheet.</p>
@@ -110,12 +118,47 @@ function show(p){
   h+='</table></div>';$('spOut').innerHTML=h;
   $('spMsg').textContent='Preview only. Nothing was changed in the sheet. Checked '+new Date(p.at).toLocaleString()+'.';
 }
-$('spGo').onclick=function(){
+function busy(on){['spGo','spTest','spRun','spUndo'].forEach(function(i){$(i).disabled=on})}
+function why(e){return e==='bad pin'?'The PIN did not work. Sign in again in Show Mode.':e==='unknown action'?'The sheet script does not have this step yet.':e==='locked'?'Locked. Sort for real and Undo stay off until a real PIN replaces the test PIN.':e==='blocked'?'Stopped before changing anything: some formulas would break if rows moved. They are listed below.':e==='confirm missing'?'That needs a second tap to confirm.':String(e)}
+function post(body,msg,done){
   var pin=g('pin');if(!pin){$('spMsg').innerHTML='Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.';return}
-  $('spMsg').textContent='Reading the sheet...';$('spGo').disabled=true;
-  fetch(APP,{method:'POST',body:JSON.stringify({action:'sortPreview',pin:pin,tab:$('spTab').value}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
-    $('spGo').disabled=false;
-    if(!j.ok){$('spMsg').textContent=j.error==='bad pin'?'The PIN did not work. Sign in again in Show Mode.':j.error==='unknown action'?'The sheet script does not have the preview step yet.':'Error: '+j.error;return}
-    show(j.preview)}).catch(function(){$('spGo').disabled=false;$('spMsg').textContent='Could not reach the sheet. Check the connection and try again.'})};
+  body.pin=pin;body.tab=$('spTab').value;if(msg){$('spMsg').textContent=msg;busy(true)}
+  fetch(APP,{method:'POST',body:JSON.stringify(body),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
+    if(msg)busy(false);if(!j.ok){if(msg)$('spMsg').textContent=why(j.error);return}done(j)
+  }).catch(function(){if(msg){busy(false);$('spMsg').textContent='Could not reach the sheet. Check the connection and try again.'}})}
+function chk(c){if(!c)return '';var l=(c.crossList||[]).concat(c.relList||[]);
+  if(!c.cross&&!c.rel)return '<div class="card"><b class="ok">Safe to sort</b> <span class="mute">&middot; no formula in these rows points at another row or another tab, apart from the price link the sort rebuilds.</span></div>';
+  return '<div class="card"><b class="err">'+(c.cross+c.rel)+' formulas would break if rows moved</b><table style="margin-top:8px"><tr><th>Cell</th><th>Formula</th></tr>'+l.map(function(x){return '<tr><td>'+esc(x.col)+x.row+'</td><td>'+esc(x.f)+'</td></tr>'}).join('')+'</table><div class="mute">Sort for real stays blocked until these are fixed.</div></div>'}
+function when(iso){var t=new Date(iso);return isNaN(t)?'':t.toLocaleString()}
+function status(){post({action:'sortStatus'},'',function(j){var s=j.status||{},b=(s.backups||[]).slice().reverse(),h='';
+  h+='<div class="card"><b class="'+(s.locked?'warn':'ok')+'">'+(s.locked?'Sort for real is locked':'Sort for real is unlocked')+'</b> <span class="mute">&middot; '+(s.locked?'it turns on when a real PIN replaces the test PIN. Preview and Test on a copy work now.':'every sort makes a backup first.')+'</span>';
+  if(b.length)h+='<table style="margin-top:8px"><tr><th>Sorted</th><th>Backup tab</th><th></th></tr>'+b.map(function(e){return '<tr><td>'+esc(when(e.at))+'</td><td>'+esc(e.tabBackup)+'</td><td class="mute">'+(e.undone?'undone':'')+'</td></tr>'}).join('')+'</table><div class="mute">The last 6 backups are kept as tabs in the sheet.</div>';
+  $('spLock').innerHTML=h+'</div>'})}
+function ask(text,yes,fn){var a=$('spAsk');a.innerHTML='<div>'+text+'</div><div class="row" style="margin-top:10px"><button class="go" id="spYes">'+yes+'</button><button id="spNo">Cancel</button></div>';a.hidden=false;
+  $('spNo').onclick=function(){a.hidden=true};$('spYes').onclick=function(){a.hidden=true;fn()}}
+function line(ok,t){return '<div class="step"><b class="'+(ok?'ok':'err')+'">'+(ok?'Pass':'FAIL')+'</b><div>'+t+'</div></div>'}
+$('spGo').onclick=function(){$('spAsk').hidden=true;post({action:'sortPreview'},'Reading the sheet...',function(j){show(j.preview);if(j.preview&&!j.preview.error)$('spOut').insertAdjacentHTML('afterbegin',chk(j.preview.checks));status()})};
+$('spTest').onclick=function(){$('spAsk').hidden=true;post({action:'sortTest'},'Sorting a copy and undoing it. This takes about a minute...',function(j){var t=j.test||{};
+  if(t.error){$('spMsg').textContent=why(t.error);$('spRes').innerHTML=chk(t.checks);return}
+  var all=t.pricesSame&&t.orderOk&&!t.idWrong&&t.undoOk!==false;
+  $('spRes').innerHTML='<h3>Test on a copy</h3><div class="card"><b class="'+(all?'ok':'err')+'">'+(all?'Passed':'Did not pass')+'</b> <span class="mute">&middot; '+t.rows+' rows, '+t.moved+' moved &middot; '+esc(when(t.at))+'</span>'+
+    line(t.orderOk,'Rows landed in the order the preview showed.')+
+    line(t.pricesSame,'Every product kept the same price it had before the sort.'+(t.diffs&&t.diffs.length?' '+t.diffs.length+' did not.':''))+
+    line(!t.idWrong,t.idMatched+' price rows sit beside the right product ID'+(t.idWrong?', '+t.idWrong+' do not.':'.'))+
+    (t.undoOk==null?'':line(t.undoOk,t.undoOk?'Undo put every cell back exactly as it was.':'Undo left differences: '+t.undoCells+' rows on the tab, '+t.undoCache+' price rows.'))+
+    '<div class="mute" style="margin-top:8px">Look at the result in the sheet: tabs '+esc(t.testTab)+' and '+esc(t.testCache)+'. Your real tab was not touched.</div></div>';
+  $('spMsg').textContent=all?'Test passed. Nothing in the real tab changed.':'Test did not pass. Do not sort the real tab yet.'})};
+$('spRun').onclick=function(){ask('Sort the real <b>'+esc($('spTab').value)+'</b> tab now? A backup of the tab and its prices is made first, and Undo last sort puts it back.','Yes, sort it',function(){
+  post({action:'sortRun',confirm:'SORT'},'Backing up, then sorting...',function(j){var r=j.run||{};
+    if(r.error){$('spMsg').textContent=why(r.error);$('spRes').innerHTML=chk(r.checks);status();return}
+    $('spRes').innerHTML='<h3>Sorted</h3><div class="card"><b class="ok">Done</b> <span class="mute">&middot; '+r.rows+' rows, '+r.moved+' moved &middot; '+esc(when(r.at))+'</span><div class="mute" style="margin-top:6px">Backup tabs: '+esc(r.backup)+' and '+esc(r.cacheBackup)+'.</div></div>';
+    $('spOut').innerHTML='';$('spMsg').textContent='Sorted. Undo last sort puts it back.';status()})})};
+$('spUndo').onclick=function(){ask('Undo the last sort? The tab goes back to exactly how it was before that sort. Anything typed into those rows since then is lost.','Yes, undo it',function(){
+  post({action:'sortUndo',confirm:'UNDO'},'Putting the tab back...',function(j){var r=j.undo||{};
+    if(r.error){$('spMsg').textContent=why(r.error);status();return}
+    $('spRes').innerHTML='<h3>Undone</h3><div class="card"><b class="ok">Restored</b> <span class="mute">&middot; '+r.rows+' rows put back from '+esc(r.restored)+'.</span></div>';
+    $('spOut').innerHTML='';$('spMsg').textContent='The sort from '+when(r.from)+' was undone.';status()})})};
+function enter(){if(location.hash==='#sort'&&g('pin')&&!$('spLock').innerHTML)status()}
+window.addEventListener('hashchange',enter);enter();
 })();
 </script></body></html>

@@ -44,14 +44,13 @@ main{order:2}
 <div id="top"><b>TCG Control Room</b><span><a href="/app/" style="color:var(--acc);text-decoration:none;border:1px solid var(--acc);border-radius:99px;padding:4px 10px">Show Mode &rarr;</a></span></div>
 <main>
 
-<section class="v" id="v-home"><h2>Home <span class="badge b-tpl">Template</span></h2><p class="lead">Everything in the sheet at a glance.</p>
-<div class="grid"><div class="card"><div class="mute">Inventory value</div><div class="n">$246,004</div></div><div class="card"><div class="mute">Inventory cost</div><div class="n">$260,412</div></div><div class="card"><div class="mute">Packs in stock</div><div class="n">1,995</div></div><div class="card"><div class="mute">2026 true net profit</div><div class="n">$41,870</div></div></div>
-<h3>Needs attention</h3>
-<div class="card"><div class="row"><span class="warn">6</span> products need a TCGplayer link <a href="#links" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
-<div class="card"><div class="row"><span class="warn">3</span> prices dropped more than 15% this week <a href="#alerts" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
-<div class="card"><div class="row"><span class="err">25</span> rows show #N/A or #REF! <a href="#prices" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
-<h3>Biggest movers</h3><div class="card"><table><tr><th>Product</th><th>Qty</th><th>Change</th></tr><tr><td>Hobbit Gift Bundle</td><td>138</td><td class="err">-16.4%</td></tr><tr><td>Spiderman Collector Omega</td><td>14</td><td class="ok">+16.9%</td></tr></table></div>
-<div class="note">Wiring: reads the sheet through the app link, same as Show Mode. Needs a weekly snapshot row for the "since" numbers.</div></section>
+<section class="v" id="v-home"><h2>Home <span class="badge b-live">Live</span></h2><p class="lead">One button runs the routine. The setup for each step lives in its own tab.</p>
+<div class="card"><button class="go" id="rtGo" style="width:100%;min-height:56px;font-size:17px">Run the routine</button>
+<div class="mute" style="margin-top:8px">Checks links, refreshes prices, sorts the tab with a backup first, and logs every price with its change since the last update.</div></div>
+<div id="rtMsg" class="note" hidden></div>
+<div id="rtSteps"></div>
+<div id="rtOut"></div>
+<h3>Last run</h3><div id="rtLast"><div class="card mute">Nothing yet.</div></div></section>
 
 <section class="v" id="v-show"><h2>Show mode <span class="badge b-live">Live</span></h2><p class="lead">Phone price list for shows. Built and working.</p><a href="/app/"><button class="go">Open Show Mode</button></a></section>
 
@@ -63,13 +62,11 @@ main{order:2}
 <div id="spRes"></div>
 <div id="spOut"></div></section>
 
-<section class="v" id="v-prices"><h2>Prices <span class="badge b-tpl">Template &middot; priority 2</span></h2><p class="lead">Refresh status, freshness per row, what changed. The price source is a setting so a feed can be swapped without touching the sheet.</p>
-<div class="grid"><div class="card"><div class="mute">Last refresh</div><div class="n warn">Sep 16</div><div class="mute">67 days ago, stale</div></div><div class="card"><div class="mute">Rows with a price</div><div class="n">145 / 232</div><div class="mute">25 errors, 62 missing</div></div></div>
-<h3>Price source</h3><div class="card"><label><input type="radio" name="ps" checked> Free community feed (TCGCSV)</label><br><label><input type="radio" name="ps"> TCGplayer seller export (CSV upload)</label><br><label><input type="radio" name="ps"> Current script (unofficial endpoint)</label><div class="mute" style="margin-top:6px">Only the first two stay inside the site's terms. Your call.</div></div>
-<div class="row"><button class="go" disabled>Refresh now</button><button disabled>Upload export</button><select><option>Every other day</option><option>Daily</option><option>Weekly</option><option>Manual only</option></select></div>
-<h3>Price history (new)</h3><div class="card mute">Each refresh will save a dated price per product so charts and the "since" numbers are real. Only the Sept 16 pull exists today.</div>
-<h3>Rows with price errors</h3><div class="card"><table><tr><th>Product</th><th>Problem</th><th>Fix</th></tr><tr><td>OP 17 Sleeve</td><td class="err">#N/A</td><td><button>Add link</button></td></tr><tr><td>Reality Fracture Draft Night</td><td class="err">#REF!</td><td><button>Re-align</button></td></tr><tr><td>Hobbit Play Pack</td><td class="warn">stale 67d</td><td><button>Refresh row</button></td></tr></table></div>
-<div class="note">Wiring: needs the price source chosen, plus a scheduled trigger. Check the LinkerTick_ trigger that was erroring (10-26) before adding triggers.</div></section>
+<section class="v" id="v-prices"><h2>Prices <span class="badge b-live">Live</span></h2><p class="lead">Prices come from the free TCGplayer product list (TCGCSV), which updates once a day. Check prices shows what would change and writes nothing. Refresh writes the new prices and logs each one with its change in the PRICE LOG tab.</p>
+<div class="row"><button class="go" id="prDry">Check prices</button><button id="prGo">Refresh prices now</button></div>
+<div id="prAsk" class="card" hidden></div>
+<div id="prMsg" class="note">Tap Check prices. Nothing is changed until you tap Refresh.</div>
+<div id="prOut"></div></section>
 
 <section class="v" id="v-singles"><h2>Singles adder <span class="badge b-tpl">Template</span></h2><p class="lead">Bonus, after sorting and prices.</p>
 <div class="card"><b>1. Upload photos</b><div class="mute">Photo goes to the site.</div></div><div class="card"><b>2. Confirm the match</b><div class="mute">Pick the right card from the link matcher queue.</div></div><div class="card"><b>3. Paid and trade note</b><div class="mute">Trade note doubles as the card's notes. Flag "Sending to PSA".</div></div>
@@ -206,5 +203,81 @@ $('lkOut').onclick=function(e){var b=e.target.closest('button[data-act]');if(!b)
   body.action='linkSave';[].forEach.call($('lk-'+r.row).querySelectorAll('button'),function(x){x.disabled=true});
   api(body).then(function(j){var s=j.save;if(s.error){r.msg=lkErr(s.error);lkDraw(r);return}
     r.msg='';r.state='saved';r.saved={url:s.url,was:s.was,pid:s.pid,priced:s.priced,price:s.price,name:pick&&pick.name};lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)})};
+
+// ---- Prices and the routine ----
+var TAB='Inventory - Sealed';
+function usd(x){return '$'+Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function usd0(x){return '$'+Math.round(Math.abs(x)).toLocaleString('en-US')}
+function sgn(x){return x<0?'-':'+'}
+function priceLoop(dry,tick){var S={items:[],miss:[],run:'',linked:0};
+  function step(after){return api({action:'priceStep',dry:dry,after:after,run:S.run}).then(function(j){var p=j.price||{};if(p.error)throw p.error;
+    S.run=p.run;S.linked=p.linked;S.items=S.items.concat(p.items);S.miss=S.miss.concat(p.miss);if(tick)tick(p.done,p.total);
+    return p.next?step(p.next):S})}
+  return step('')}
+function priceSum(S){var o={linked:S.linked,n:S.items.length,up:0,down:0,same:0,fresh:0,before:0,after:0,miss:S.miss.length,movers:[]};
+  S.items.forEach(function(x){var old=x[3],now=x[4],q=x[2]>0?x[2]:0;
+    if(!(old>0)){o.fresh++;return}
+    if(now>old)o.up++;else if(now<old)o.down++;else o.same++;o.before+=q*old;o.after+=q*now;
+    if(q>0&&now!==old)o.movers.push({name:x[1],qty:q,old:old,now:now,pct:Math.round(1000*(now-old)/old)/10,val:Math.round(q*(now-old))})});
+  o.before=Math.round(o.before);o.after=Math.round(o.after);
+  o.movers.sort(function(a,b){return Math.abs(b.val)-Math.abs(a.val)});o.movers=o.movers.slice(0,10);return o}
+function priceHtml(o,miss,dry){var d=o.after-o.before,h='';
+  h+='<div class="grid"><div class="card"><div class="mute">Prices '+(dry?'checked':'updated')+'</div><div class="n">'+o.n+'</div><div class="mute">of '+o.linked+' products with a link</div></div>'+
+    '<div class="card"><div class="mute">Up / down</div><div class="n"><span class="ok">'+o.up+'</span> / <span class="err">'+o.down+'</span></div><div class="mute">'+o.same+' the same, '+o.fresh+' had no price before</div></div>'+
+    '<div class="card"><div class="mute">In-stock value change</div><div class="n '+(d<0?'err':'ok')+'">'+sgn(d)+usd0(d)+'</div><div class="mute">'+usd0(o.before)+' to '+usd0(o.after)+', items that had a price before</div></div></div>';
+  if(o.movers&&o.movers.length)h+='<h3>Biggest moves, by dollars in stock</h3><div class="card" style="overflow-x:auto"><table><tr><th>Product</th><th>Qty</th><th>Was</th><th>Now</th><th>Change</th><th>In stock</th></tr>'+o.movers.map(function(m){var c=m.now<m.old?'err':'ok';return '<tr><td>'+esc(m.name)+'</td><td>'+m.qty+'</td><td>'+usd(m.old)+'</td><td>'+usd(m.now)+'</td><td class="'+c+'">'+(m.pct>0?'+':'')+m.pct+'%</td><td class="'+c+'">'+sgn(m.val)+usd0(m.val)+'</td></tr>'}).join('')+'</table></div>';
+  if(miss&&miss.length)h+='<h3>No price found</h3><div class="card"><table><tr><th>Row</th><th>Product</th><th>Why</th></tr>'+miss.map(function(m){return '<tr><td>'+m[0]+'</td><td>'+esc(m[1])+'</td><td class="warn">'+esc(m[3])+'</td></tr>'}).join('')+'</table></div>';
+  return h}
+function prBusy(on){$('prDry').disabled=on;$('prGo').disabled=on}
+function prRun(dry){$('prAsk').hidden=true;prBusy(true);$('prOut').innerHTML='';$('prMsg').textContent='Reading the sheet...';
+  priceLoop(dry,function(d,t){$('prMsg').textContent=(dry?'Checking':'Updating')+' prices: set '+d+' of '+t+'...'}).then(function(S){prBusy(false);
+    $('prOut').innerHTML=priceHtml(priceSum(S),S.miss,dry);
+    $('prMsg').textContent=dry?'Check only. Nothing was changed in the sheet.':'Prices updated. Each one is logged with its change in the PRICE LOG tab.'},
+  function(e){prBusy(false);$('prMsg').textContent=lkErr(e)})}
+$('prDry').onclick=function(){prRun(true)};
+$('prGo').onclick=function(){var a=$('prAsk');a.innerHTML='<div>Write new prices to the sheet now? The old price of every product is kept in the PRICE LOG tab.</div><div class="row" style="margin-top:10px"><button class="go" id="prYes">Yes, refresh</button><button id="prNo">Cancel</button></div>';a.hidden=false;
+  $('prNo').onclick=function(){a.hidden=true};$('prYes').onclick=function(){prRun(false)}};
+
+var RT={on:false,stop:false},RS=[];
+function rtDraw(){$('rtSteps').innerHTML=RS.length?'<div class="card">'+RS.map(function(r){var c=r[2]==='ok'?'ok':r[2]==='err'?'err':r[2]==='warn'?'warn':'mute',t=r[2]==='ok'?'Done':r[2]==='err'?'Stopped':r[2]==='warn'?'Done':r[2]==='run'?'Now':'Next';
+  return '<div class="step"><b class="'+c+'" style="flex:0 0 62px">'+t+'</b><div><b>'+r[0]+'</b><div class="mute">'+esc(r[1])+'</div></div></div>'}).join('')+'</div>':''}
+function rtSet(i,st,text){RS[i]=[RS[i][0],text,st];rtDraw()}
+function rtMsg(t){var m=$('rtMsg');m.hidden=!t;m.innerHTML=t||''}
+function rtCheck(){if(RT.stop)throw 'stopped'}
+function rtHtml(d){var h='';if(d.price)h+=priceHtml(d.price,d.missList,false);
+  if(d.links&&d.links.inStock)h+='<div class="card"><div class="row"><span class="warn">'+d.links.inStock+'</span> in-stock products still need a TCGplayer link <a href="#links" style="margin-left:auto;color:var(--acc)">Open Links</a></div></div>';
+  if(d.sort&&d.sort.backup)h+='<div class="card mute">Sorted '+d.sort.moved+' rows. Backup tab: '+esc(d.sort.backup)+'. Undo is on the <a href="#sort" style="color:var(--acc)">Sort</a> tab.</div>';
+  return h}
+function rtLast(){if(!g('pin'))return;api({action:'routineLast'}).then(function(j){var l=j.last;if(!l)return;
+  $('rtLast').innerHTML='<div class="card"><b>'+esc(when(l.at))+'</b><div class="mute" style="margin-top:4px">'+esc(l.text)+'</div></div>'+(RT.shown?'':l.data?rtHtml(l.data):'')},function(){})}
+function rtEnd(t){RT.on=false;$('rtGo').textContent='Run the routine';$('rtGo').disabled=false;rtMsg(t)}
+$('rtGo').onclick=function(){
+  if(RT.on){RT.stop=true;$('rtGo').disabled=true;rtMsg('Stopping after this step...');return}
+  if(!g('pin')){rtMsg('Sign in first: open <a href="/app/" style="color:var(--acc)">Show Mode</a>, enter the username and PIN, then come back.');return}
+  RT={on:true,stop:false,t0:Date.now(),shown:false};var R={sort:{}};RS=[['Link check','Waiting'],['Prices','Waiting'],['Sort','Waiting'],['Log','Waiting']];
+  $('rtGo').textContent='Stop';$('rtOut').innerHTML='';rtMsg('Running. Keep this page open.');rtSet(0,'run','Reading the sheet...');
+  api({action:'linkList'}).then(function(j){var L=j.links;R.links={rows:L.rows,linked:L.linked,inStock:L.inStock};
+    rtSet(0,L.inStock?'warn':'ok',L.linked+' of '+L.rows+' products have a link.'+(L.inStock?' '+L.inStock+' in stock still need one.':''));rtCheck();
+    rtSet(1,'run','Starting...');return priceLoop(false,function(d,t){rtSet(1,'run','Set '+d+' of '+t+'...');rtCheck()})})
+  .then(function(S){R.S=S;var o=R.o=priceSum(S),d=o.after-o.before;
+    rtSet(1,S.miss.length?'warn':'ok',o.n+' prices updated: '+o.up+' up, '+o.down+' down, '+o.fresh+' new.'+(S.miss.length?' '+S.miss.length+' not found.':'')+' In-stock value '+sgn(d)+usd0(d)+'.');rtCheck();
+    rtSet(2,'run','Checking the order...');return api({action:'sortPreview',tab:TAB})})
+  .then(function(j){var p=j.preview||{};if(p.error)throw p.error;
+    if(p.checks&&(p.checks.cross||p.checks.rel)){R.sort={error:'blocked'};rtSet(2,'err','Skipped: some formulas would break if rows moved. Open the Sort tab to see them.');return}
+    if(!p.moved){R.sort={moved:0};rtSet(2,'ok','Already in order. Nothing moved.');return}
+    rtCheck();rtSet(2,'run','Backing up, then sorting '+p.moved+' rows...');
+    return api({action:'sortRun',tab:TAB,confirm:'SORT'}).then(function(j){var r=j.run||{};
+      if(r.error){R.sort={error:r.error};rtSet(2,'err',why(r.error));return}
+      R.sort={moved:r.moved,backup:r.backup};rtSet(2,'ok',r.moved+' rows moved. Backup tab: '+r.backup+'.')})})
+  .then(function(){rtSet(3,'run','Saving the run...');var o=R.o,d=o.after-o.before;
+    R.data={links:R.links,price:o,missList:R.S.miss.slice(0,15),sort:R.sort,run:R.S.run};
+    var text='Links '+R.links.linked+' of '+R.links.rows+' ('+R.links.inStock+' in stock need one). Prices: '+o.n+' updated, '+o.up+' up, '+o.down+' down, '+o.fresh+' new, '+o.miss+' not found. In-stock value '+sgn(d)+usd0(d)+'. Sort: '+(R.sort.error?'skipped':(R.sort.moved||0)+' rows moved')+'.';
+    return api({action:'routineSave',summary:{text:text,backup:R.sort.backup||'',data:R.data}})})
+  .then(function(j){var sv=j.saved||{};rtSet(3,'ok','Every price is in the PRICE LOG tab with its change.'+(sv.logged?' The run is in the CONTROLS run log.':''));
+    RT.shown=true;$('rtOut').innerHTML=rtHtml(R.data);rtEnd('Done in '+Math.round((Date.now()-RT.t0)/1000)+' seconds.');rtLast()})
+  .catch(function(e){RS.forEach(function(r,i){if(r[2]==='run')rtSet(i,'err',e==='stopped'?'Stopped here.':lkErr(e))});
+    rtEnd(e==='stopped'?'Stopped. The steps marked Done stay done.':lkErr(e))})};
+function rtEnter(){var h=(location.hash||'#home').slice(1);if(h==='home'&&!RT.on&&!RT.shown)rtLast()}
+window.addEventListener('hashchange',rtEnter);rtEnter();
 })();
 </script></body></html>

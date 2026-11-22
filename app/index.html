@@ -43,8 +43,8 @@ input.s{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
 <header><button id="mode">All</button><button id="rf" aria-label="Refresh">&#8635;</button><input class="s" id="q" type="search" placeholder="Search" autocomplete="off"><button id="menu" aria-label="Types">&#9776;</button></header>
 </div>
 <div id="setupBox" class="setup" hidden>
-<h2>Show Mode setup</h2><p style="color:var(--mute)">One time on this phone. Paste the app link and PIN from the sheet's script. They stay on this device only.</p>
-<label>App link<input id="u" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="off"></label>
+<h2>Jones TCG</h2><p style="color:var(--mute)">Sign in once on this phone. It stays signed in on this device only.</p>
+<label>Username<input id="u" autocapitalize="off" autocomplete="username"></label>
 <label>PIN<input id="pn" type="password" inputmode="numeric" autocomplete="off"></label>
 <button id="go" class="on">Save and load</button><p id="err" style="color:#ff7b7b"></p></div>
 <div id="shade"></div><div id="drawer"></div><div id="sheet"></div>
@@ -52,6 +52,7 @@ input.s{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
 (function(){
 var LS={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 var $=function(i){return document.getElementById(i)};
+var APP='https://script.google.com/macros/s/AKfycbwF083GAceTjY_wIxnv3cnfIdJPKsy6ND8nqyNv01DDGdpTqn0HJ-XT4zft50BsR0vJHQ/exec';
 var items=[],type='ALL',brand='',mode='all',take={};try{take=JSON.parse(LS.g('take')||'{}')}catch(e){}
 // price rule: under $25 round up to the next $1; from $25 up round up to the next $5
 function price(p){return p<25?Math.ceil(p-1e-9):Math.ceil(p/5-1e-9)*5}
@@ -59,11 +60,11 @@ function ago(iso){if(!iso)return '';var t=new Date(iso.replace(' ','T'));if(isNa
 function fmt(iso){var t=new Date(iso.replace(' ','T'));return isNaN(t)?'':(t.getMonth()+1)+'/'+t.getDate()+' '+((t.getHours()%12)||12)+':'+('0'+t.getMinutes()).slice(-2)+(t.getHours()<12?'a':'p')}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function load(){
-  var u=LS.g('url'),pin=LS.g('pin');if(!u||!pin){$('app').hidden=true;$('setupBox').hidden=false;return}
+  var u=APP,pin=LS.g('pin');if(!pin||LS.g('user')!=='jones'){$('app').hidden=true;$('setupBox').hidden=false;return}
   $('setupBox').hidden=true;$('app').hidden=false;$('app').style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
   var cached=LS.g('items');if(cached){try{items=JSON.parse(cached);render()}catch(e){}}else $('grid').innerHTML='<div class="msg">Loading...</div>';
   fetch(u,{method:'POST',body:JSON.stringify({action:'show',pin:pin}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
-    if(!j.ok){if(j.error==='bad pin'){LS.s('pin','');$('app').hidden=true;$('setupBox').hidden=false;$('err').textContent='That PIN did not work.';return}throw new Error(j.error)}
+    if(!j.ok){if(j.error==='bad pin'){LS.s('pin','');LS.s('user','');$('app').hidden=true;$('setupBox').hidden=false;$('err').textContent='Username or PIN did not work.';return}throw new Error(j.error)}
     items=j.items;LS.s('items',JSON.stringify(items));LS.s('at',j.at);render()
   }).catch(function(e){$('when').textContent='Offline, showing saved list'})
 }
@@ -91,11 +92,11 @@ function drawer(){
   var h='<button data-t="ALL" class="'+(type==='ALL'?'on':'')+'">All <span>'+items.length+'</span></button><h4>Type</h4>';
   Object.keys(types).sort().forEach(function(t){h+='<button data-t="'+esc(t)+'" class="'+(type===t&&!brand?'on':'')+'">'+esc(t)+' <span>'+types[t].n+'</span></button>';
     if(type===t)Object.keys(types[t].b).sort().forEach(function(b){h+='<button data-t="'+esc(t)+'" data-b="'+esc(b)+'" class="'+(brand===b?'on':'')+'" style="padding-left:24px">'+esc(b)+' <span>'+types[t].b[b]+'</span></button>'})});
-  h+='<h4>Device</h4><button id="reset">Change app link / PIN</button><button id="clr">Clear Taking marks</button>';$('drawer').innerHTML=h}
+  h+='<h4>Device</h4><button id="reset">Sign out</button><button id="clr">Clear Taking marks</button>';$('drawer').innerHTML=h}
 function open(on){$('drawer').classList.toggle('open',on);$('shade').classList.toggle('open',on);if(on)drawer()}
 $('menu').onclick=function(){open(true)};$('shade').onclick=function(){open(false);$('sheet').classList.remove('open')};
 $('drawer').onclick=function(e){var b=e.target.closest('button');if(!b)return;
-  if(b.id==='reset'){LS.s('url','');LS.s('pin','');location.reload();return}
+  if(b.id==='reset'){LS.s('user','');LS.s('pin','');LS.s('items','');location.reload();return}
   if(b.id==='clr'){take={};LS.s('take','{}');render();drawer();return}
   type=b.dataset.t;brand=b.dataset.b||'';render();open(false);$('grid').scrollTop=0};
 $('mode').onclick=function(){mode=mode==='all'?'take':'all';render()};
@@ -104,7 +105,7 @@ $('grid').onclick=function(e){var c=e.target.closest('.c');if(!c)return;var i=it
   var st=ago(i.pulled);$('sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><b>'+esc(i.name)+'</b><div style="color:var(--mute)">'+esc(i.brand)+' &middot; '+esc(i.type)+'</div></div><div class="big">$'+price(i.price)+'</div></div><p style="color:var(--mute)">In stock: '+i.qty+(i.pulled?' &middot; TCGplayer price pulled '+fmt(i.pulled)+' ('+st+')':'')+(i.price?' &middot; market $'+i.price.toFixed(2):'')+'</p><button id="tk" class="'+(take[i.row]?'on':'')+'" style="width:100%">'+(take[i.row]?'Taking to the show (tap to remove)':'Take to show')+'</button>';
   $('sheet').classList.add('open');$('shade').classList.add('open');
   $('tk').onclick=function(){if(take[i.row])delete take[i.row];else take[i.row]=1;LS.s('take',JSON.stringify(take));$('sheet').classList.remove('open');$('shade').classList.remove('open');render()}};
-$('go').onclick=function(){var u=$('u').value.trim(),p=$('pn').value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\//.test(u)){$('err').textContent='That does not look like the app link.';return}if(!p){$('err').textContent='Enter the PIN.';return}LS.s('url',u);LS.s('pin',p);$('err').textContent='';load()};
+$('go').onclick=function(){var u=$('u').value.trim().toLowerCase(),p=$('pn').value.trim();if(u!=='jones'||!p){$('err').textContent='Enter the username and PIN.';return}LS.s('user','jones');LS.s('pin',p);$('err').textContent='';load()};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/app/sw.js').catch(function(){});
 load();
 })();

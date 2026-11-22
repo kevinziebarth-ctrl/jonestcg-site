@@ -42,6 +42,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 .gc button{margin-top:auto;width:100%;padding:8px 2px;font-size:13px}
 .gc .op{display:block;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 2px;font-size:13px;color:var(--acc);text-decoration:none;min-height:36px}
 .gc.hot{border-color:var(--acc);background:rgba(242,182,48,.10)}
+.nr{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}.nr input{margin-top:3px;width:20px;height:20px;flex:none}.nr>span{min-width:0;flex:1}.nr>span>*{display:block}.nr .old{text-decoration:line-through;font-size:13px}.nr .sm{font-size:12px}
 /* PC: nav on top. Phones and tablets keep it at the bottom. */
 @media (min-width:900px) and (hover:hover) and (pointer:fine){
 nav{order:1;border-top:0;border-bottom:1px solid var(--line);padding:6px 14px;justify-content:center}
@@ -79,10 +80,15 @@ main{order:2}
 <div class="card"><b>1. Upload photos</b><div class="mute">Photo goes to the site.</div></div><div class="card"><b>2. Confirm the match</b><div class="mute">Pick the right card from the link matcher queue.</div></div><div class="card"><b>3. Paid and trade note</b><div class="mute">Trade note doubles as the card's notes. Flag "Sending to PSA".</div></div>
 <div class="row"><button disabled>Send all to the sheet and site</button><button disabled>Make PSA submission list</button></div></section>
 
-<section class="v" id="v-links"><h2>Link matcher <span class="badge b-live">Live</span></h2><p class="lead">Products with no TCGplayer link. Each one gets up to 3 guesses with how sure the match is. Anything 90% or better is highlighted. Tap Use this on the right one and the link is saved to the sheet. The picture and price follow.</p>
+<section class="v" id="v-links"><h2>Link matcher <span class="badge b-live">Live</span></h2><p class="lead">Products with no TCGplayer link. Each one gets up to 3 guesses with how sure the match is. Anything 90% or better is highlighted. Tap Use this on the right one and the link is saved to the sheet. The product takes its full TCGplayer name, and the picture and price follow.</p>
 <div class="row"><button class="go" id="lkGo">Load the list</button><label><input type="checkbox" id="lkStock" checked> In stock only</label></div>
 <div id="lkMsg" class="note">Tap Load the list. Nothing is saved until you tap Use this.</div>
-<div id="lkOut"></div></section>
+<div id="lkOut"></div>
+<h2 style="margin-top:26px">Names <span class="badge b-live">Live</span></h2><p class="lead">Every linked product takes its full TCGplayer name, and the sheet gets a Set column. Check names shows every change first and writes nothing.</p>
+<div class="row"><button class="go" id="nmDry">Check names</button><button id="nmGo" disabled>Update names now</button><button id="nmUndo">Undo names</button></div>
+<div id="nmAsk" class="card" hidden></div>
+<div id="nmMsg" class="note">Tap Check names. Nothing changes until you tap Update names now.</div>
+<div id="nmOut"></div></section>
 
 <section class="v" id="v-reports"><h2>Reports <span class="badge b-tpl">Template</span></h2><p class="lead">Charts from the sheet, plus dated PDFs and a share link for Nic.</p>
 <div class="card"><b>Revenue vs profit by month</b><div class="mute">chart goes here</div></div><div class="card"><b>Revenue by channel</b><div class="mute">chart goes here</div></div>
@@ -182,7 +188,7 @@ function money(p){return p>0?'$'+Number(p).toFixed(2):'no price yet'}
 function lkCard(r){
   var h='<div class="row"><b>'+esc(r.name)+'</b><span class="mute">'+esc(r.brand)+' &middot; '+esc(r.type)+' &middot; qty '+r.qty+' &middot; row '+r.row+'</span></div>';
   if(r.msg)h+='<div class="warn" style="margin-top:6px">'+esc(r.msg)+'</div>';
-  if(r.state==='saved'){var s=r.saved;return h+'<div class="gs"><img alt="" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(s.pid)+'_200w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="x"><b class="ok">Saved</b> '+esc(s.name||'Pasted link')+'<div class="mute">'+(s.priced?'Price filled: '+money(s.price):'Price fills on the next price refresh')+'</div></div><button data-act="undo" data-row="'+r.row+'">Undo</button></div>'}
+  if(r.state==='saved'){var s=r.saved;return h+'<div class="gs"><img alt="" src="https://tcgplayer-cdn.tcgplayer.com/product/'+esc(s.pid)+'_200w.jpg" onerror="this.style.visibility=\'hidden\'"><div class="x"><b class="ok">Saved</b> '+esc(s.name||'Pasted link')+'<div class="mute">'+(s.renamed?'Renamed. It was: '+esc(s.oldName)+'. ':'')+(s.priced?'Price filled: '+money(s.price):'Price fills on the next price refresh')+'</div></div><button data-act="undo" data-row="'+r.row+'">Undo</button></div>'}
   if(r.state==='wait')return h+'<div class="mute" style="margin-top:6px">Waiting its turn...</div>';
   if(r.state==='loading')return h+'<div class="mute" style="margin-top:6px">Looking for matches...</div>';
   var G=(r.g&&r.g.guesses)||[];
@@ -203,13 +209,47 @@ $('lkGo').onclick=function(){var run=++lkRun;$('lkMsg').textContent='Reading the
 $('lkStock').onchange=function(){lkAll();lkNext(lkRun)};
 $('lkOut').onclick=function(e){var b=e.target.closest('button[data-act]');if(!b)return;var r=LK.filter(function(x){return x.row==b.dataset.row})[0];if(!r)return;
   var act=b.dataset.act,body={row:r.row,name:r.name,brand:r.brand,type:r.type},pick=null;
-  if(act==='undo'){body.action='linkUndo';body.url=r.saved.url;body.was=r.saved.was;body.priced=r.saved.priced;b.disabled=true;
-    api(body).then(function(j){if(j.undo&&j.undo.error){r.msg=lkErr(j.undo.error);lkDraw(r);return}r.state='ready';r.saved=null;r.msg='';lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)});return}
+  if(act==='undo'){body.action='linkUndo';body.url=r.saved.url;body.was=r.saved.was;body.priced=r.saved.priced;body.renamed=r.saved.renamed;body.oldName=r.saved.oldName;b.disabled=true;
+    api(body).then(function(j){if(j.undo&&j.undo.error){r.msg=lkErr(j.undo.error);lkDraw(r);return}if(r.saved.renamed)r.name=r.saved.oldName;r.state='ready';r.saved=null;r.msg='';lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)});return}
   if(act==='use'){pick=r.g.guesses[Number(b.dataset.i)];body.url=pick.url;body.cat=pick.cat;body.gid=pick.gid}
   else{var inp=$('lkOut').querySelector('input[data-paste="'+r.row+'"]');body.url=(inp.value||'').trim().split('?')[0];if(!body.url){r.msg='Paste the link first.';lkDraw(r);return}}
-  body.action='linkSave';[].forEach.call($('lk-'+r.row).querySelectorAll('button'),function(x){x.disabled=true});
+  body.action='linkSave';body.rename=true;[].forEach.call($('lk-'+r.row).querySelectorAll('button'),function(x){x.disabled=true});
   api(body).then(function(j){var s=j.save;if(s.error){r.msg=lkErr(s.error);lkDraw(r);return}
-    r.msg='';r.state='saved';r.saved={url:s.url,was:s.was,pid:s.pid,priced:s.priced,price:s.price,name:pick&&pick.name};lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)})};
+    r.msg='';r.state='saved';r.saved={url:s.url,was:s.was,pid:s.pid,priced:s.priced,price:s.price,name:s.name||(pick&&pick.name),renamed:!!s.renamed,oldName:s.oldName};if(s.renamed)r.name=s.name;lkDraw(r)},function(e){r.msg=lkErr(e);lkDraw(r)})};
+
+// ---- Names ----
+var NM=null,NMFLAG={dup:'Two rows share this link. Check it before renaming.',low:'The two names look very different. Check the link before renaming.'};
+function nmBusy(b){['nmDry','nmGo','nmUndo'].forEach(function(i){$(i).disabled=b});if(!b)$('nmGo').disabled=!(NM&&NM.items.length)}
+function nmLoop(dry,skip,tick){var S={items:[],miss:[],same:0,linked:0,renamed:0,skipped:0};
+  function step(after){return api({action:'nameStep',dry:dry,after:after,skip:skip}).then(function(j){var n=j.names;if(n.error)throw n.error;
+    S.items=S.items.concat(n.items);S.miss=S.miss.concat(n.miss);S.same+=n.same;S.renamed+=n.renamed;S.skipped+=n.skipped;S.linked=n.linked;tick(n.done,n.total);
+    return n.next?step(n.next):S})}
+  return step('')}
+function nmMiss(S){return S.miss.length?'<div class="card"><b class="warn">'+S.miss.length+' could not be read</b>'+S.miss.map(function(m){return '<div class="mute" style="margin-top:6px">Row '+m[0]+': '+esc(m[1])+'. '+esc(m[3])+'</div>'}).join('')+'</div>':''}
+function nmList(S){var L=S.items.slice().sort(function(a,b){return (a[4]?0:1)-(b[4]?0:1)||a[0]-b[0]});
+  return '<div class="card"><b>'+L.length+' names would change</b><div class="mute">Old name crossed out, new name under it. Untick any you want left alone.</div>'+L.map(function(x){
+    return '<label class="nr"><input type="checkbox" data-k="'+x[0]+':'+esc(x[5])+'"'+(x[4]?'':' checked')+'><span><span class="mute old">'+esc(x[1])+'</span><b>'+esc(x[2])+'</b><span class="mute sm">'+esc(x[3])+' &middot; row '+x[0]+'</span>'+(x[4]?'<span class="warn sm">'+NMFLAG[x[4]]+'</span>':'')+'</span></label>'}).join('')+'</div>'}
+function nmTick(d,t){$('nmMsg').textContent='Reading TCGplayer names... set '+d+' of '+t}
+$('nmDry').onclick=function(){$('nmAsk').hidden=true;NM=null;nmBusy(true);$('nmOut').innerHTML='';$('nmMsg').textContent='Reading the sheet...';
+  nmLoop(true,[],nmTick).then(function(S){NM=S;nmBusy(false);var f=S.items.filter(function(x){return x[4]}).length;
+    $('nmMsg').textContent=S.linked+' linked products. '+S.same+' already match TCGplayer. '+S.items.length+' would change'+(f?', and '+f+' of those are unticked so you can check the link first':'')+'. Nothing was written.';
+    $('nmOut').innerHTML=(S.items.length?nmList(S):'<div class="card ok">Every linked product already has its TCGplayer name.</div>')+nmMiss(S)},
+  function(e){nmBusy(false);$('nmMsg').textContent=lkErr(e)})};
+$('nmGo').onclick=function(){if(!NM)return;var skip=[].map.call($('nmOut').querySelectorAll('input[data-k]'),function(c){return c.checked?null:c.dataset.k}).filter(Boolean),n=NM.items.length-skip.length,a=$('nmAsk');
+  if(!n){$('nmMsg').textContent='Nothing is ticked, so there is nothing to rename.';return}
+  a.innerHTML='<div>Rename '+n+' products in the sheet now?'+(skip.length?' The '+skip.length+' unticked stay as they are.':'')+' Every old name is kept in the Old name column, so Undo names puts them back.</div><div class="row" style="margin-top:10px"><button class="go" id="nmYes">Yes, rename</button><button id="nmNo">Not now</button></div>';a.hidden=false;
+  $('nmNo').onclick=function(){a.hidden=true};
+  $('nmYes').onclick=function(){a.hidden=true;NM=null;nmBusy(true);$('nmOut').innerHTML='';$('nmMsg').textContent='Renaming...';
+    nmLoop(false,skip,function(d,t){$('nmMsg').textContent='Renaming... set '+d+' of '+t}).then(function(S){nmBusy(false);
+      $('nmMsg').textContent='Renamed '+S.renamed+' products.'+(S.skipped?' Left '+S.skipped+' alone.':'')+' The Set, TCGplayer name and Old name columns are at the far right of the sheet. Run the sort or the routine to put the new names in order.';
+      $('nmOut').innerHTML=nmMiss(S)},
+    function(e){nmBusy(false);$('nmMsg').textContent=lkErr(e)+' Some names may already be changed. Tap Check names to see what is left.'})}};
+$('nmUndo').onclick=function(){var a=$('nmAsk');
+  a.innerHTML='<div>Put back the old name on every renamed product?</div><div class="row" style="margin-top:10px"><button class="go" id="nmUYes">Yes, put them back</button><button id="nmNo">Not now</button></div>';a.hidden=false;
+  $('nmNo').onclick=function(){a.hidden=true};
+  $('nmUYes').onclick=function(){a.hidden=true;NM=null;nmBusy(true);$('nmOut').innerHTML='';$('nmMsg').textContent='Putting the old names back...';
+    api({action:'nameUndo'}).then(function(j){nmBusy(false);var u=j.undo;if(u.error){$('nmMsg').textContent=lkErr(u.error);return}
+      $('nmMsg').textContent=u.restored?'Put back '+u.restored+' old names.':'There were no old names to put back.'},function(e){nmBusy(false);$('nmMsg').textContent=lkErr(e)})}};
 
 // ---- Prices and the routine ----
 var TAB='Inventory - Sealed';

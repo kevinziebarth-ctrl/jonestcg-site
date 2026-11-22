@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0a1330">
+<title>Jones TCG Show Mode</title>
+<link rel="manifest" href="/app/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{color-scheme:dark;--bg:#0a1330;--panel:#121d40;--line:#24325f;--ink:#eef1f7;--mute:#9fb0d6;--acc:#f2b630;--ok:#3ecf8e}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.3 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;gap:6px;align-items:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
+#top{padding:max(8px,env(safe-area-inset-top)) 10px 4px;display:flex;justify-content:space-between;align-items:baseline;color:var(--mute);font-size:12px}
+button,input{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
+button.on{background:var(--acc);color:#111;border-color:var(--acc);font-weight:700}
+input.s{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
+#grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:4px 8px 10px;align-content:start}
+.th{grid-column:1/-1;margin:10px 0 2px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--acc);padding-bottom:2px;font-weight:800;font-size:15px}.th span{font-weight:500;font-size:11px;color:var(--mute)}
+.bh{grid-column:1/-1;margin:4px 0 0;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.c{cursor:pointer;position:relative;display:block;width:100%;align-self:start;height:0;padding:0 0 140% 0;border-radius:8px;overflow:hidden;background:var(--panel);border:1px solid var(--line);min-height:0}
+.c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.c .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--mute);font-size:22px;padding:4px;text-align:center}
+.c .p{position:absolute;left:0;right:0;bottom:0;padding:14px 5px 3px;background:linear-gradient(transparent,rgba(0,0,0,.82));display:flex;justify-content:space-between;align-items:flex-end;color:#fff}
+.c .p b{font-size:20px;line-height:1;color:var(--acc)}.c .p b i{font-size:12px;font-style:normal;vertical-align:top}
+.c .p span{font-size:10px;opacity:.85}
+.c .t{position:absolute;top:3px;left:3px;right:3px;font-size:9px;color:#fff;background:rgba(0,0,0,.55);border-radius:4px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c.take{outline:3px solid var(--ok);outline-offset:-3px}.c.take::after{content:"\2713";position:absolute;top:3px;right:3px;background:var(--ok);color:#fff;border-radius:50%;width:18px;height:18px;font-size:12px;text-align:center;line-height:18px}
+.stale{color:#ffb454}
+#drawer{position:fixed;top:0;bottom:0;right:0;width:78%;max-width:320px;background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .18s;z-index:5;overflow-y:auto;padding:12px;padding-top:max(12px,env(safe-area-inset-top))}
+#drawer.open{transform:none}#shade{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4;display:none}#shade.open{display:block}
+#drawer h4{margin:12px 0 4px;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+#drawer button{width:100%;text-align:left;margin:2px 0;display:flex;justify-content:space-between}
+#sheet{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .18s;z-index:6}
+#sheet.open{transform:none}#sheet .big{font-size:34px;font-weight:800}
+.setup{padding:18px;max-width:480px;margin:auto;overflow-y:auto}.setup input{display:block;width:100%;margin:6px 0 12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
+.msg{padding:20px;color:var(--mute);text-align:center;grid-column:1/-1}
+</style></head><body>
+<div id="app" hidden>
+<div id="top"><b id="cnt"></b><span id="when"></span></div>
+<div id="grid"></div>
+<header><button id="mode">All</button><button id="rf" aria-label="Refresh">&#8635;</button><input class="s" id="q" type="search" placeholder="Search" autocomplete="off"><button id="menu" aria-label="Types">&#9776;</button></header>
+</div>
+<div id="setupBox" class="setup" hidden>
+<h2>Show Mode setup</h2><p style="color:var(--mute)">One time on this phone. Paste the app link and PIN from the sheet's script. They stay on this device only.</p>
+<label>App link<input id="u" placeholder="https://script.google.com/macros/s/.../exec" autocapitalize="off"></label>
+<label>PIN<input id="pn" type="password" inputmode="numeric" autocomplete="off"></label>
+<button id="go" class="on">Save and load</button><p id="err" style="color:#ff7b7b"></p></div>
+<div id="shade"></div><div id="drawer"></div><div id="sheet"></div>
+<script>
+(function(){
+var LS={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+var $=function(i){return document.getElementById(i)};
+var items=[],type='ALL',brand='',mode='all',take={};try{take=JSON.parse(LS.g('take')||'{}')}catch(e){}
+// price rule: under $25 round up to the next $1; from $25 up round up to the next $5
+function price(p){return p<25?Math.ceil(p-1e-9):Math.ceil(p/5-1e-9)*5}
+function ago(iso){if(!iso)return '';var t=new Date(iso.replace(' ','T'));if(isNaN(t))return '';var d=(Date.now()-t)/864e5;return d<1?'today':d<2?'1d ago':Math.floor(d)+'d ago'}
+function fmt(iso){var t=new Date(iso.replace(' ','T'));return isNaN(t)?'':(t.getMonth()+1)+'/'+t.getDate()+' '+((t.getHours()%12)||12)+':'+('0'+t.getMinutes()).slice(-2)+(t.getHours()<12?'a':'p')}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function load(){
+  var u=LS.g('url'),pin=LS.g('pin');if(!u||!pin){$('app').hidden=true;$('setupBox').hidden=false;return}
+  $('setupBox').hidden=true;$('app').hidden=false;$('app').style.cssText='display:flex;flex-direction:column;flex:1;min-height:0';
+  var cached=LS.g('items');if(cached){try{items=JSON.parse(cached);render()}catch(e){}}else $('grid').innerHTML='<div class="msg">Loading...</div>';
+  fetch(u,{method:'POST',body:JSON.stringify({action:'show',pin:pin}),headers:{'Content-Type':'text/plain'}}).then(function(r){return r.json()}).then(function(j){
+    if(!j.ok){if(j.error==='bad pin'){LS.s('pin','');$('app').hidden=true;$('setupBox').hidden=false;$('err').textContent='That PIN did not work.';return}throw new Error(j.error)}
+    items=j.items;LS.s('items',JSON.stringify(items));LS.s('at',j.at);render()
+  }).catch(function(e){$('when').textContent='Offline, showing saved list'})
+}
+function filt(){var q=$('q').value.trim().toLowerCase();return items.filter(function(i){
+  if(type!=='ALL'&&i.type!==type)return false;if(brand&&i.brand!==brand)return false;if(mode==='take'&&!take[i.row])return false;
+  return !q||(i.name+' '+i.brand+' '+i.type).toLowerCase().indexOf(q)>=0}).sort(function(a,b){return a.type.localeCompare(b.type)||a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name)})}
+function render(){
+  var list=filt(),g=$('grid');g.innerHTML='';
+  if(!list.length)g.innerHTML='<div class="msg">'+(mode==='take'?'Nothing marked yet. Switch to All and tap cards.':'No matches.')+'</div>';
+  var f=document.createDocumentFragment(),lt=null,lb=null,cnt={},bc={};
+  list.forEach(function(i){var t=i.type||'Other';cnt[t]=(cnt[t]||0)+1;bc[t+'|'+i.brand]=(bc[t+'|'+i.brand]||0)+1});
+  list.forEach(function(i){var t=i.type||'Other';
+    if(t!==lt){var h=document.createElement('div');h.className='th';h.id='sec-'+encodeURIComponent(t);h.innerHTML='<div>'+esc(t)+'</div><span>'+cnt[t]+' items</span>';f.appendChild(h);lt=t;lb=null}
+    if(i.brand!==lb){var bh=document.createElement('div');bh.className='bh';bh.textContent=(i.brand||'Other')+' ('+bc[t+'|'+i.brand]+')';f.appendChild(bh);lb=i.brand}
+var b=document.createElement('div');b.setAttribute('role','button');b.tabIndex=0;b.className='c'+(take[i.row]?' take':'');b.dataset.r=i.row;
+    var ini=i.name.split(/\s+/).slice(0,2).map(function(w){return w[0]}).join('');
+    b.innerHTML='<div class="ini">'+esc(ini)+'</div>'+(i.pid?'<img alt="" loading="lazy" src="https://tcgplayer-cdn.tcgplayer.com/product/'+i.pid+'_200w.jpg" onerror="this.remove()">':'')+'<div class="t">'+esc(i.name)+'</div><div class="p"><b><i>$</i>'+price(i.price)+'</b><span>x'+i.qty+'</span></div>';
+    f.appendChild(b)});g.appendChild(f);
+  $('cnt').textContent=list.length+' items'+(mode==='take'?' to take':'');
+  var at=LS.g('at');$('when').textContent=at?'List loaded '+fmt(at):'';
+  $('mode').textContent=mode==='all'?'All':'Taking ('+Object.keys(take).length+')';$('mode').className=mode==='take'?'on':'';
+}
+function drawer(){
+  var types={};items.forEach(function(i){(types[i.type||'Other']=types[i.type||'Other']||{n:0,b:{}}).n++;var t=types[i.type||'Other'];t.b[i.brand]=(t.b[i.brand]||0)+1});
+  var h='<button data-t="ALL" class="'+(type==='ALL'?'on':'')+'">All <span>'+items.length+'</span></button><h4>Type</h4>';
+  Object.keys(types).sort().forEach(function(t){h+='<button data-t="'+esc(t)+'" class="'+(type===t&&!brand?'on':'')+'">'+esc(t)+' <span>'+types[t].n+'</span></button>';
+    if(type===t)Object.keys(types[t].b).sort().forEach(function(b){h+='<button data-t="'+esc(t)+'" data-b="'+esc(b)+'" class="'+(brand===b?'on':'')+'" style="padding-left:24px">'+esc(b)+' <span>'+types[t].b[b]+'</span></button>'})});
+  h+='<h4>Device</h4><button id="reset">Change app link / PIN</button><button id="clr">Clear Taking marks</button>';$('drawer').innerHTML=h}
+function open(on){$('drawer').classList.toggle('open',on);$('shade').classList.toggle('open',on);if(on)drawer()}
+$('menu').onclick=function(){open(true)};$('shade').onclick=function(){open(false);$('sheet').classList.remove('open')};
+$('drawer').onclick=function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.id==='reset'){LS.s('url','');LS.s('pin','');location.reload();return}
+  if(b.id==='clr'){take={};LS.s('take','{}');render();drawer();return}
+  type=b.dataset.t;brand=b.dataset.b||'';render();open(false);$('grid').scrollTop=0};
+$('mode').onclick=function(){mode=mode==='all'?'take':'all';render()};
+$('rf').onclick=load;$('q').oninput=render;
+$('grid').onclick=function(e){var c=e.target.closest('.c');if(!c)return;var i=items.filter(function(x){return x.row==c.dataset.r})[0];if(!i)return;
+  var st=ago(i.pulled);$('sheet').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><b>'+esc(i.name)+'</b><div style="color:var(--mute)">'+esc(i.brand)+' &middot; '+esc(i.type)+'</div></div><div class="big">$'+price(i.price)+'</div></div><p style="color:var(--mute)">In stock: '+i.qty+(i.pulled?' &middot; TCGplayer price pulled '+fmt(i.pulled)+' ('+st+')':'')+(i.price?' &middot; market $'+i.price.toFixed(2):'')+'</p><button id="tk" class="'+(take[i.row]?'on':'')+'" style="width:100%">'+(take[i.row]?'Taking to the show (tap to remove)':'Take to show')+'</button>';
+  $('sheet').classList.add('open');$('shade').classList.add('open');
+  $('tk').onclick=function(){if(take[i.row])delete take[i.row];else take[i.row]=1;LS.s('take',JSON.stringify(take));$('sheet').classList.remove('open');$('shade').classList.remove('open');render()}};
+$('go').onclick=function(){var u=$('u').value.trim(),p=$('pn').value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\//.test(u)){$('err').textContent='That does not look like the app link.';return}if(!p){$('err').textContent='Enter the PIN.';return}LS.s('url',u);LS.s('pin',p);$('err').textContent='';load()};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/app/sw.js').catch(function(){});
+load();
+})();
+</script></body></html>

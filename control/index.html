@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0a1330">
+<title>Jones TCG Control Room</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1330;--panel:#121d40;--line:#24325f;--ink:#eef1f7;--mute:#9fb0d6;--acc:#f2b630;--ok:#3ecf8e;--bad:#ff7b7b;--warn:#ffb454}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column}
+#top{padding:max(10px,env(safe-area-inset-top)) 14px 8px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line)}
+#top b{font-size:18px;color:var(--acc)}#top span{font-size:12px;color:var(--mute)}
+main{flex:1;overflow-y:auto;padding:12px 14px 24px;max-width:900px;width:100%;margin:auto}
+nav{display:flex;gap:4px;overflow-x:auto;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
+nav a{flex:0 0 auto;color:var(--mute);text-decoration:none;padding:9px 12px;border-radius:10px;font-size:13px;white-space:nowrap}
+nav a.on{background:var(--acc);color:#111;font-weight:700}
+.v{display:none}.v.on{display:block}
+h2{margin:6px 0 2px;font-size:22px}h3{margin:18px 0 6px;font-size:14px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+p.lead{color:var(--mute);margin:0 0 10px}
+.badge{display:inline-block;font-size:11px;font-weight:700;border-radius:99px;padding:2px 9px;margin-left:8px;vertical-align:middle;border:1px solid}
+.b-live{color:var(--ok);border-color:var(--ok)}.b-tpl{color:var(--acc);border-color:var(--acc)}.b-later{color:var(--mute);border-color:var(--line)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,select,input{font:inherit;color:inherit}
+button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:40px}
+button.go{background:var(--acc);color:#111;border-color:var(--acc);font-weight:700}
+button[disabled]{opacity:.45}
+select,input[type=text],input[type=number]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line)}th{color:var(--mute);font-weight:600}
+.n{font-size:26px;font-weight:800}.mute{color:var(--mute)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.step{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}.step:last-child{border:0}
+.drag{display:flex;gap:6px;flex-wrap:wrap}.drag span{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}.drag span:before{content:"\2630  ";color:var(--mute)}
+.note{border-left:3px solid var(--acc);padding:6px 10px;color:var(--mute);margin:10px 0;font-size:13px}
+.err{color:var(--bad)}.warn{color:var(--warn)}.ok{color:var(--ok)}
+</style></head><body>
+<div id="top"><b>TCG Control Room</b><span>Template &middot; sample numbers until wired</span></div>
+<main>
+
+<section class="v" id="v-home"><h2>Home <span class="badge b-tpl">Template</span></h2><p class="lead">Everything in the sheet at a glance.</p>
+<div class="grid"><div class="card"><div class="mute">Inventory value</div><div class="n">$246,004</div></div><div class="card"><div class="mute">Inventory cost</div><div class="n">$260,412</div></div><div class="card"><div class="mute">Packs in stock</div><div class="n">1,995</div></div><div class="card"><div class="mute">2026 true net profit</div><div class="n">$41,870</div></div></div>
+<h3>Needs attention</h3>
+<div class="card"><div class="row"><span class="warn">6</span> products need a TCGplayer link <a href="#links" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
+<div class="card"><div class="row"><span class="warn">3</span> prices dropped more than 15% this week <a href="#alerts" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
+<div class="card"><div class="row"><span class="err">25</span> rows show #N/A or #REF! <a href="#prices" style="margin-left:auto;color:var(--acc)">Open</a></div></div>
+<h3>Biggest movers</h3><div class="card"><table><tr><th>Product</th><th>Qty</th><th>Change</th></tr><tr><td>Hobbit Gift Bundle</td><td>138</td><td class="err">-16.4%</td></tr><tr><td>Spiderman Collector Omega</td><td>14</td><td class="ok">+16.9%</td></tr></table></div>
+<div class="note">Wiring: reads the sheet through the app link, same as Show Mode. Needs a weekly snapshot row for the "since" numbers.</div></section>
+
+<section class="v" id="v-show"><h2>Show mode <span class="badge b-live">Live</span></h2><p class="lead">Phone price list for shows. Built and working.</p><a href="/app/"><button class="go">Open Show Mode</button></a></section>
+
+<section class="v" id="v-sort"><h2>Sort &amp; controls <span class="badge b-tpl">Template &middot; priority 1</span></h2><p class="lead">Sort the sheet, re-align PriceCache, with a backup first and an Undo. Preview shows the result before anything is touched.</p>
+<h3>Tabs to sort</h3><div class="card"><label><input type="checkbox" checked> Inventory - Sealed</label><br><label><input type="checkbox"> Singles Page</label><br><label><input type="checkbox"> MISC ITEMS</label></div>
+<h3>Steps</h3><div class="card">
+<div class="step"><input type="checkbox" checked disabled><div><b>Backup first</b><div class="mute">Copies the tab, keeps the last 6. Always on.</div></div></div>
+<div class="step"><input type="checkbox" checked><div><b>Sort</b><div class="mute">Brand order, then type order, then name.</div></div></div>
+<div class="step"><input type="checkbox" checked><div><b>Re-align PriceCache</b><div class="mute">Fixes rows that moved so prices follow their product.</div></div></div>
+<div class="step"><input type="checkbox"><div><b>Clean PriceCache</b><div class="mute">Clears #N/A and #REF! rows after you review them.</div></div></div></div>
+<h3>Brand order</h3><div class="card drag"><span>Pokemon</span><span>Magic</span><span>One Piece</span><span>Lorcana</span><span>Other</span></div>
+<h3>Type order</h3><div class="card drag"><span>Elite Trainer Box</span><span>Booster Box</span><span>Bundle</span><span>Pack</span><span>Other</span></div>
+<div class="row" style="margin-top:10px"><button>Preview result</button><button class="go" disabled>Run selected</button><button disabled>Undo last run</button></div>
+<div class="note">Wiring (first build): new "sortPreview" action returns the first rows in the new order and changes nothing. "sortRun" is a second step, makes the backup, then writes. Drag order saved in Script Properties.</div></section>
+
+<section class="v" id="v-prices"><h2>Prices <span class="badge b-tpl">Template &middot; priority 2</span></h2><p class="lead">Refresh status, freshness per row, what changed. The price source is a setting so a feed can be swapped without touching the sheet.</p>
+<div class="grid"><div class="card"><div class="mute">Last refresh</div><div class="n warn">Sep 16</div><div class="mute">67 days ago, stale</div></div><div class="card"><div class="mute">Rows with a price</div><div class="n">145 / 232</div><div class="mute">25 errors, 62 missing</div></div></div>
+<h3>Price source</h3><div class="card"><label><input type="radio" name="ps" checked> Free community feed (TCGCSV)</label><br><label><input type="radio" name="ps"> TCGplayer seller export (CSV upload)</label><br><label><input type="radio" name="ps"> Current script (unofficial endpoint)</label><div class="mute" style="margin-top:6px">Only the first two stay inside the site's terms. Your call.</div></div>
+<div class="row"><button class="go" disabled>Refresh now</button><button disabled>Upload export</button><select><option>Every other day</option><option>Daily</option><option>Weekly</option><option>Manual only</option></select></div>
+<h3>Price history (new)</h3><div class="card mute">Each refresh will save a dated price per product so charts and the "since" numbers are real. Only the Sept 16 pull exists today.</div>
+<h3>Rows with price errors</h3><div class="card"><table><tr><th>Product</th><th>Problem</th><th>Fix</th></tr><tr><td>OP 17 Sleeve</td><td class="err">#N/A</td><td><button>Add link</button></td></tr><tr><td>Reality Fracture Draft Night</td><td class="err">#REF!</td><td><button>Re-align</button></td></tr><tr><td>Hobbit Play Pack</td><td class="warn">stale 67d</td><td><button>Refresh row</button></td></tr></table></div>
+<div class="note">Wiring: needs the price source chosen, plus a scheduled trigger. Check the LinkerTick_ trigger that was erroring (10-26) before adding triggers.</div></section>
+
+<section class="v" id="v-singles"><h2>Singles adder <span class="badge b-tpl">Template</span></h2><p class="lead">Bonus, after sorting and prices.</p>
+<div class="card"><b>1. Upload photos</b><div class="mute">Photo goes to the site.</div></div><div class="card"><b>2. Confirm the match</b><div class="mute">Pick the right card from the link matcher queue.</div></div><div class="card"><b>3. Paid and trade note</b><div class="mute">Trade note doubles as the card's notes. Flag "Sending to PSA".</div></div>
+<div class="row"><button disabled>Send all to the sheet and site</button><button disabled>Make PSA submission list</button></div></section>
+
+<section class="v" id="v-links"><h2>Link matcher <span class="badge b-tpl">Template</span></h2><p class="lead">For each product with no TCGplayer link, tap the right guess. The product ID is saved and image and price fill in.</p>
+<div class="card"><b>6 left</b> &middot; <span class="mute">0 confirmed this session</span><div class="row" style="margin-top:8px"><button disabled>Confirm all above 90%</button></div></div><div class="note">Needs a product list feed (same as Prices).</div></section>
+
+<section class="v" id="v-reports"><h2>Reports <span class="badge b-tpl">Template</span></h2><p class="lead">Charts from the sheet, plus dated PDFs and a share link for Nic.</p>
+<div class="card"><b>Revenue vs profit by month</b><div class="mute">chart goes here</div></div><div class="card"><b>Revenue by channel</b><div class="mute">chart goes here</div></div>
+<div class="row"><button disabled>Make this week's PDF</button><button disabled>Copy share link for Nic</button></div></section>
+
+<section class="v" id="v-alerts"><h2>Alerts <span class="badge b-tpl">Template</span></h2><p class="lead">Checked after every price refresh.</p>
+<div class="card"><b class="err">Price drop</b> Hobbit Gift Bundle fell 16.4%. About -$2,600 on 138 held. <button style="float:right">Dismiss</button></div>
+<div class="card"><b class="ok">Price jump</b> Spiderman Collector Omega rose 16.9%. <button style="float:right">Dismiss</button></div>
+<div class="card"><b class="warn">Missing price</b> 25 errors, 62 never priced.</div>
+<h3>Rule</h3><div class="card row">Alert when a price moves more than <input type="number" value="15" style="width:64px"> % <select><option>This page only</option><option>Email</option><option>Phone push</option></select></div></section>
+
+<section class="v" id="v-log"><h2>Run log &amp; undo <span class="badge b-tpl">Template</span></h2><p class="lead">Every run is recorded, every sort makes a backup first.</p>
+<div class="card"><table><tr><th>When</th><th>Step</th><th>Result</th><th></th></tr><tr><td>Nov 12 9:14</td><td>Sort + re-align</td><td class="ok">232 rows, 0 mismatches</td><td><button>Undo</button></td></tr><tr><td>Nov 12 9:13</td><td>Backup</td><td class="ok">kept last 6</td><td></td></tr></table></div></section>
+
+<section class="v" id="v-more"><h2>More <span class="badge b-later">Later</span></h2><p class="lead">Stickers and extras. Kept separate so nothing else depends on them.</p>
+<div class="card"><b>Stickers</b><div class="mute">2x2 price stickers from the Show Mode list. Needs a printer choice first.</div></div>
+<div class="card"><b>Extras menu</b><div class="mute">Weekly snapshot, duplicate finder, restock radar, card-from-photo. Untick what Nic doesn't want.</div></div></section>
+</main>
+<nav id="nav"><a href="#home">Home</a><a href="#show">Show</a><a href="#sort">Sort</a><a href="#prices">Prices</a><a href="#singles">Singles</a><a href="#links">Links</a><a href="#reports">Reports</a><a href="#alerts">Alerts</a><a href="#log">Log</a><a href="#more">More</a></nav>
+<script>
+(function(){var v=['home','show','sort','prices','singles','links','reports','alerts','log','more'];
+function go(){var h=(location.hash||'#home').slice(1);if(v.indexOf(h)<0)h='home';
+v.forEach(function(x){document.getElementById('v-'+x).classList.toggle('on',x===h)});
+[].forEach.call(document.querySelectorAll('#nav a'),function(a){var on=a.getAttribute('href')==='#'+h;a.classList.toggle('on',on);if(on)a.scrollIntoView({inline:'center',block:'nearest'})});
+document.querySelector('main').scrollTop=0}
+window.addEventListener('hashchange',go);go()})();
+</script></body></html>
